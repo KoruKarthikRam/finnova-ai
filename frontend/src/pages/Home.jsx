@@ -6,7 +6,7 @@ function Home() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:5000/")
+      .get("http://localhost:5000/api/health")
       .then((response) => {
         setMessage(response.data.message);
       })
