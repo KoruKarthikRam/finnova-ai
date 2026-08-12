@@ -2,6 +2,12 @@ const mongoose = require("mongoose");
 
 const transactionSchema = new mongoose.Schema(
   {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
     type: {
       type: String,
       enum: ["income", "expense"],
@@ -24,6 +30,11 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       trim: true,
       default: "",
+    },
+
+    isEssential: {
+      type: Boolean,
+      default: true,
     },
 
     date: {

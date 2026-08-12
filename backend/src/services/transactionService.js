@@ -1,22 +1,25 @@
 const Transaction = require("../models/Transaction");
 
-const getAllTransactions = async () => {
-  return await Transaction.find().sort({ date: -1 });
+const getAllTransactions = async (userId) => {
+  return await Transaction.find({ userId }).sort({ date: -1 });
 };
 
-const getTransactionById = async (id) => {
-  return await Transaction.findById(id);
+const getTransactionById = async (id, userId) => {
+  return await Transaction.findOne({ _id: id, userId });
 };
 
-const createTransaction = async (transactionData) => {
-  const transaction = new Transaction(transactionData);
+const createTransaction = async (userId, transactionData) => {
+  const transaction = new Transaction({
+    ...transactionData,
+    userId,
+  });
 
   return await transaction.save();
 };
 
-const updateTransaction = async (id, transactionData) => {
-  return await Transaction.findByIdAndUpdate(
-    id,
+const updateTransaction = async (id, userId, transactionData) => {
+  return await Transaction.findOneAndUpdate(
+    { _id: id, userId },
     transactionData,
     {
       new: true,
@@ -25,8 +28,8 @@ const updateTransaction = async (id, transactionData) => {
   );
 };
 
-const deleteTransaction = async (id) => {
-  return await Transaction.findByIdAndDelete(id);
+const deleteTransaction = async (id, userId) => {
+  return await Transaction.findOneAndDelete({ _id: id, userId });
 };
 
 module.exports = {

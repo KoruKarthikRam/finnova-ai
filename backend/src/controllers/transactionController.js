@@ -2,8 +2,7 @@ const transactionService = require("../services/transactionService");
 
 const getTransactions = async (req, res) => {
   try {
-    const transactions =
-      await transactionService.getAllTransactions();
+    const transactions = await transactionService.getAllTransactions(req.user.id);
 
     res.json({
       success: true,
@@ -19,8 +18,10 @@ const getTransactions = async (req, res) => {
 
 const getTransaction = async (req, res) => {
   try {
-    const transaction =
-      await transactionService.getTransactionById(req.params.id);
+    const transaction = await transactionService.getTransactionById(
+      req.params.id,
+      req.user.id
+    );
 
     if (!transaction) {
       return res.status(404).json({
@@ -43,8 +44,10 @@ const getTransaction = async (req, res) => {
 
 const createTransaction = async (req, res) => {
   try {
-    const transaction =
-      await transactionService.createTransaction(req.body);
+    const transaction = await transactionService.createTransaction(
+      req.user.id,
+      req.body
+    );
 
     res.status(201).json({
       success: true,
@@ -61,11 +64,11 @@ const createTransaction = async (req, res) => {
 
 const updateTransaction = async (req, res) => {
   try {
-    const transaction =
-      await transactionService.updateTransaction(
-        req.params.id,
-        req.body
-      );
+    const transaction = await transactionService.updateTransaction(
+      req.params.id,
+      req.user.id,
+      req.body
+    );
 
     if (!transaction) {
       return res.status(404).json({
@@ -89,8 +92,10 @@ const updateTransaction = async (req, res) => {
 
 const deleteTransaction = async (req, res) => {
   try {
-    const transaction =
-      await transactionService.deleteTransaction(req.params.id);
+    const transaction = await transactionService.deleteTransaction(
+      req.params.id,
+      req.user.id
+    );
 
     if (!transaction) {
       return res.status(404).json({
