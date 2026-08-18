@@ -36,6 +36,7 @@ function Dashboard() {
   const [healthData, setHealthData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [anomalies, setAnomalies] = useState([]);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -78,6 +79,17 @@ function Dashboard() {
         }
         if (healthRes.data.success) {
           setHealthData(healthRes.data.data);
+        }
+
+        // Fetch anomalies independently to prevent crashing dashboard if AI service is down
+        try {
+          const anomalyRes = await axios.get("http://localhost:5000/api/ai/anomalies", config);
+          if (anomalyRes.data.success) {
+            setAnomalies(anomalyRes.data.anomalies || []);
+          }
+        } catch (anomalyErr) {
+          console.error("Failed to load anomalies from AI service:", anomalyErr);
+          setAnomalies([]);
         }
       } catch (err) {
         console.error(err);
@@ -300,14 +312,44 @@ function Dashboard() {
               </span>
             </div>
 
-            <div className="rounded-2xl bg-amber-50/50 p-6 border border-amber-100/50 flex items-center justify-between shadow-sm">
-              <div>
-                <h4 className="font-bold text-slate-800">Anomaly Detections</h4>
-                <p className="text-sm text-slate-500 mt-1">Outliers flagged by Isolation Forest (Day 14 task).</p>
+            <div className="rounded-2xl bg-amber-50/50 p-6 border border-amber-100/50 flex flex-col justify-between shadow-sm gap-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="font-bold text-slate-800">Anomaly Detections</h4>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {anomalies.length > 0
+                      ? `We flagged ${anomalies.length} transaction(s) that deviate significantly from your typical behavior.`
+                      : "No unusual transaction patterns detected."}
+                  </p>
+                </div>
+                <span className={`text-sm font-semibold px-3 py-1 rounded-full ${
+                  anomalies.length > 0 ? "bg-rose-100 text-rose-700" : "bg-amber-100 text-amber-700"
+                }`}>
+                  {anomalies.length > 0 ? `${anomalies.length} Warning(s)` : "Active Scanning"}
+                </span>
               </div>
-              <span className="text-sm font-semibold text-amber-700 bg-amber-100 px-3 py-1 rounded-full">
-                Active scanning
-              </span>
+              
+              {anomalies.length > 0 && (
+                <div className="space-y-2 mt-2">
+                  {anomalies.map((anom) => (
+                    <div key={anom.id || anom._id} className="bg-white rounded-xl p-3 border border-amber-200/60 shadow-xxs flex justify-between items-center text-xs">
+                      <div>
+                        <p className="font-bold text-slate-800">{anom.description || "Unlabeled Outlier"}</p>
+                        <p className="text-slate-400 font-medium">
+                          {new Date(anom.date).toLocaleDateString("en-IN", {
+                            day: "numeric",
+                            month: "short"
+                          })} • {anom.category}
+                        </p>
+                        <p className="text-amber-600 mt-1 font-semibold">{anom.reason}</p>
+                      </div>
+                      <span className="font-extrabold text-sm text-rose-600 ml-4 whitespace-nowrap">
+                        -₹{anom.amount.toLocaleString()}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

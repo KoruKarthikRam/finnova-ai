@@ -18,6 +18,39 @@ const checkAiServiceHealth = async () => {
   }
 };
 
+const analyzeTransactions = async (transactions) => {
+  try {
+    const response = await aiServiceClient.post("/analyze", { transactions });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service analyze transaction failed:", error.message);
+    throw error;
+  }
+};
+
+const classifyDescription = async (description) => {
+  try {
+    const response = await aiServiceClient.post("/classify", { description });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service classify description failed:", error.message);
+    throw error;
+  }
+};
+
+const detectAnomalies = async (transactions) => {
+  try {
+    const response = await aiServiceClient.post("/anomalies", { transactions });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service anomaly detection failed:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   checkAiServiceHealth,
+  analyzeTransactions,
+  classifyDescription,
+  detectAnomalies,
 };

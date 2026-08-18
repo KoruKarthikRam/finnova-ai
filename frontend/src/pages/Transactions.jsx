@@ -9,6 +9,8 @@ function Transactions() {
   const [description, setDescription] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [isEssential, setIsEssential] = useState(true);
+  const [suggestedCategory, setSuggestedCategory] = useState("");
+
 
   // Filter States
   const [filterType, setFilterType] = useState("all");
@@ -75,6 +77,48 @@ function Transactions() {
     }
   }, [type]);
 
+  // Debounced API call to classify description
+  useEffect(() => {
+    if (!description.trim() || description.length < 3) {
+      setSuggestedCategory("");
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/ai/classify",
+          { description },
+          getAuthConfig()
+        );
+        if (response.data.success) {
+          const suggested = response.data.category;
+          const currentCategories = type === "expense" ? expenseCategories : incomeCategories;
+          if (currentCategories.some((cat) => cat.toLowerCase() === suggested.toLowerCase())) {
+            const matchedCat = currentCategories.find(
+              (cat) => cat.toLowerCase() === suggested.toLowerCase()
+            );
+            setSuggestedCategory(matchedCat);
+          } else {
+            setSuggestedCategory("");
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch classification suggestion:", err);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [description, type]);
+
+  const handleApplySuggestion = () => {
+    if (suggestedCategory) {
+      setCategory(suggestedCategory);
+      setSuggestedCategory("");
+    }
+  };
+
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -108,6 +152,7 @@ function Transactions() {
         setDescription("");
         setDate(new Date().toISOString().split("T")[0]);
         setIsEssential(true);
+        setSuggestedCategory("");
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create transaction");
@@ -276,6 +321,18 @@ function Transactions() {
                 placeholder="e.g., Dinner at cafe, Monthly salary"
                 className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
               />
+              {suggestedCategory && (
+                <div className="mt-1.5 flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleApplySuggestion}
+                    className="text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-md px-2.5 py-1.5 hover:bg-indigo-100 transition cursor-pointer flex items-center gap-1.5"
+                  >
+                    <span>✨ AI Suggests Category:</span> <strong>{suggestedCategory}</strong>
+                    <span className="text-xxs text-indigo-400 bg-indigo-100/50 px-1 rounded hover:bg-indigo-200">(Click to Apply)</span>
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Date input */}
