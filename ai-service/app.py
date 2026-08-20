@@ -15,6 +15,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
 # pyrefly: ignore [missing-import]
 from sklearn.pipeline import Pipeline
+# pyrefly: ignore [missing-import]
+from sklearn.linear_model import LinearRegression
 
 # Seed Training Data for Indian Merchants/Context
 training_data = [
@@ -362,9 +364,93 @@ def detect_anomalies(payload: AnomalyRequest):
             "anomalies": []
         }
 
+class ForecastRequest(BaseModel):
+    transactions: List[TransactionItem]
+
 @app.post("/forecast")
-def forecast_expenses():
-    return {"success": True, "message": "Expense Forecasting endpoint placeholder"}
+def forecast_expenses(payload: ForecastRequest):
+    transactions = payload.transactions
+    if not transactions:
+        next_month_period = pd.Period(pd.Timestamp.now(), freq="M") + 1
+        return {
+            "success": True,
+            "forecast": {
+                "next_month": next_month_period.strftime("%b %y"),
+                "predicted_amount": 0.0,
+                "method": "zero_fallback"
+            },
+            "historical_trend": []
+        }
+
+    # Load into DataFrame
+    data = [t.model_dump() for t in transactions]
+    df = pd.DataFrame(data)
+
+    # Filter to expenses
+    df_expenses = df[df["type"] == "expense"].copy()
+    if df_expenses.empty:
+        next_month_period = pd.Period(pd.Timestamp.now(), freq="M") + 1
+        return {
+            "success": True,
+            "forecast": {
+                "next_month": next_month_period.strftime("%b %y"),
+                "predicted_amount": 0.0,
+                "method": "zero_fallback"
+            },
+            "historical_trend": []
+        }
+
+    # Parse dates and group by month
+    df_expenses["date_parsed"] = pd.to_datetime(df_expenses["date"], errors="coerce")
+    df_expenses = df_expenses.dropna(subset=["date_parsed"])
+    df_expenses["year_month"] = df_expenses["date_parsed"].dt.to_period("M")
+    
+    monthly_totals = df_expenses.groupby("year_month")["amount"].sum().sort_index()
+
+    # Determine next month name
+    if not monthly_totals.empty:
+        last_month = monthly_totals.index[-1]
+        next_month_period = last_month + 1
+    else:
+        next_month_period = pd.Period(pd.Timestamp.now(), freq="M") + 1
+    
+    next_month_str = next_month_period.strftime("%b %y")
+
+    # Forecasting Logic
+    if len(monthly_totals) < 3:
+        # Fallback to monthly average
+        predicted_amount = float(monthly_totals.mean()) if not monthly_totals.empty else 0.0
+        method = "average_fallback"
+    else:
+        # Linear Regression
+        X = np.arange(len(monthly_totals)).reshape(-1, 1)
+        y = monthly_totals.values.astype(float)
+        
+        model = LinearRegression()
+        model.fit(X, y)
+        
+        next_month_idx = len(monthly_totals)
+        prediction = model.predict([[next_month_idx]])[0]
+        predicted_amount = float(max(0.0, prediction)) # Ensure not negative
+        method = "linear_regression"
+
+    # Prepare historical trend list
+    historical_trend = []
+    for period, amt in monthly_totals.items():
+        historical_trend.append({
+            "month": period.strftime("%b %y"),
+            "amount": float(amt)
+        })
+
+    return {
+        "success": True,
+        "forecast": {
+            "next_month": next_month_str,
+            "predicted_amount": round(predicted_amount, 2),
+            "method": method
+        },
+        "historical_trend": historical_trend
+    }
 
 if __name__ == "__main__":
     # pyrefly: ignore [missing-import]

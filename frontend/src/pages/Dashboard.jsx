@@ -37,6 +37,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [anomalies, setAnomalies] = useState([]);
+  const [forecastData, setForecastData] = useState(null);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -90,6 +91,17 @@ function Dashboard() {
         } catch (anomalyErr) {
           console.error("Failed to load anomalies from AI service:", anomalyErr);
           setAnomalies([]);
+        }
+
+        // Fetch forecast independently to prevent crashing dashboard if AI service is down
+        try {
+          const forecastRes = await axios.get("http://localhost:5000/api/ai/forecast", config);
+          if (forecastRes.data.success) {
+            setForecastData(forecastRes.data);
+          }
+        } catch (forecastErr) {
+          console.error("Failed to load forecast from AI service:", forecastErr);
+          setForecastData(null);
         }
       } catch (err) {
         console.error(err);
@@ -154,6 +166,29 @@ function Dashboard() {
 
   const monthlyData = getMonthlyData();
   const categoryData = getCategoryData();
+
+  const getCombinedMonthlyData = () => {
+    const data = [...monthlyData];
+    if (
+      forecastData &&
+      forecastData.forecast &&
+      forecastData.forecast.predicted_amount > 0 &&
+      forecastData.forecast.next_month
+    ) {
+      const { next_month, predicted_amount } = forecastData.forecast;
+      const monthExists = data.some((item) => item.month === next_month);
+      if (!monthExists) {
+        data.push({
+          month: next_month,
+          income: 0,
+          expense: predicted_amount,
+          isForecast: true,
+        });
+      }
+    }
+    return data;
+  };
+  const combinedMonthlyData = getCombinedMonthlyData();
 
   // 2. Calculations
   const totalIncome = transactions
@@ -357,16 +392,52 @@ function Dashboard() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Monthly comparison bar chart */}
             <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 lg:col-span-2 space-y-4">
-              <h3 className="text-xl font-bold text-slate-800">Income vs. Expenses Trend</h3>
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+                <h3 className="text-xl font-bold text-slate-800">Income vs. Expenses Trend</h3>
+                {forecastData && forecastData.forecast && forecastData.forecast.predicted_amount > 0 && (
+                  <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 border border-indigo-100/50 rounded-xl px-4 py-2 flex items-center gap-2.5 shadow-xxs">
+                    <span className="text-base">🔮</span>
+                    <div className="text-xs">
+                      <span className="font-semibold text-slate-500">Next Month Est. ({forecastData.forecast.next_month}): </span>
+                      <span className="font-extrabold text-indigo-600 text-sm">
+                        {formatCurrency(forecastData.forecast.predicted_amount)}
+                      </span>
+                      <span className="text-slate-400 font-medium ml-1">
+                        ({forecastData.forecast.method === "linear_regression" ? "Linear Regression" : "Avg. Roll"})
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyData}>
+                  <BarChart data={combinedMonthlyData}>
                     <XAxis dataKey="month" stroke="#94a3b8" fontSize={12} tickLine={false} />
                     <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip formatter={(value) => formatCurrency(value)} />
+                    <Tooltip
+                      formatter={(value, name, props) => {
+                        const isForecast = props.payload.isForecast;
+                        if (isForecast && name === "Income") return null;
+                        return [
+                          formatCurrency(value),
+                          isForecast ? `${name} (Forecast)` : name
+                        ];
+                      }}
+                    />
                     <Legend />
                     <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expense" name="Expenses" fill="#f43f5e" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expense" name="Expenses" radius={[4, 4, 0, 0]}>
+                      {combinedMonthlyData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={entry.isForecast ? "#a78bfa" : "#f43f5e"}
+                          fillOpacity={entry.isForecast ? 0.75 : 1}
+                          stroke={entry.isForecast ? "#8b5cf6" : "none"}
+                          strokeWidth={entry.isForecast ? 2 : 0}
+                          strokeDasharray={entry.isForecast ? "4 4" : "0"}
+                        />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -1,5 +1,8 @@
-const { checkAiServiceHealth, classifyDescription, detectAnomalies } = require("../services/aiService");
+const { checkAiServiceHealth, classifyDescription, detectAnomalies, getForecast } = require("../services/aiService");
 const transactionService = require("../services/transactionService");
+const { generateChatResponse } = require("../services/geminiService");
+const budgetService = require("../services/budgetService");
+const healthService = require("../services/healthService");
 
 const testAiServiceConnection = async (req, res) => {
   const result = await checkAiServiceHealth();
@@ -63,8 +66,97 @@ const getTransactionAnomalies = async (req, res) => {
   }
 };
 
+const getTransactionForecast = async (req, res) => {
+  try {
+    const transactions = await transactionService.getAllTransactions(req.user.id);
+    
+    const formattedTransactions = transactions.map((t) => ({
+      id: t._id.toString(),
+      amount: t.amount,
+      category: t.category,
+      type: t.type,
+      date: t.date.toISOString(),
+      description: t.description || "",
+    }));
+
+    const result = await getForecast(formattedTransactions);
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to get transaction forecast",
+      error: error.message,
+    });
+  }
+};
+
+const chatWithAssistant = async (req, res) => {
+  const { message, history, useContext } = req.body;
+  if (!message) {
+    return res.status(400).json({
+      success: false,
+      message: "Message is required",
+    });
+  }
+
+  try {
+    let userContext = null;
+    if (useContext) {
+      try {
+        const transactions = await transactionService.getAllTransactions(req.user.id);
+        
+        const current = new Date();
+        const currentMonth = current.getMonth() + 1;
+        const currentYear = current.getFullYear();
+        
+        const currentMonthTransactions = transactions.filter(t => {
+          const d = new Date(t.date);
+          return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+        });
+
+        const totalIncome = currentMonthTransactions
+          .filter((t) => t.type === "income")
+          .reduce((sum, item) => sum + item.amount, 0);
+
+        const totalExpenses = currentMonthTransactions
+          .filter((t) => t.type === "expense")
+          .reduce((sum, item) => sum + item.amount, 0);
+
+        const balance = totalIncome - totalExpenses;
+
+        const budgets = await budgetService.getBudgets(req.user.id, currentMonth, currentYear);
+        const healthResult = await healthService.calculateHealthScore(req.user.id);
+
+        userContext = {
+          balance,
+          totalIncome,
+          totalExpenses,
+          budgets: budgets.map(b => ({ category: b.category, limit: b.limit })),
+          healthScore: healthResult ? healthResult.score : null
+        };
+      } catch (contextError) {
+        console.error("Failed to gather user context for Gemini prompt:", contextError.message);
+      }
+    }
+
+    const response = await generateChatResponse(message, history, userContext);
+    return res.json({
+      success: true,
+      ...response
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate chat response",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   testAiServiceConnection,
   classifyTransaction,
   getTransactionAnomalies,
+  getTransactionForecast,
+  chatWithAssistant,
 };

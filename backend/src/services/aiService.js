@@ -48,9 +48,21 @@ const detectAnomalies = async (transactions) => {
   }
 };
 
+const getForecast = async (transactions) => {
+  try {
+    const response = await aiServiceClient.post("/forecast", { transactions });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service forecasting failed:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   checkAiServiceHealth,
   analyzeTransactions,
   classifyDescription,
   detectAnomalies,
+  getForecast,
 };
+
