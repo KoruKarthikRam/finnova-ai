@@ -138,6 +138,88 @@ const generateChatResponse = async (message, history = [], userContext = null) =
   }
 };
 
+/**
+ * Generates personalized natural-language recommendations (insights) using Gemini API.
+ */
+const generateInsights = async (userContext) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "your_gemini_api_key_here" || !apiKey.trim()) {
+    return {
+      insights: [
+        "Please configure your `GEMINI_API_KEY` in the backend `.env` file to unlock dynamic AI-generated insights.",
+        `Your current balance is ₹${userContext.balance.toLocaleString('en-IN')}. Set category budgets on the Budgets page to keep track of wants vs essentials.`,
+        "Try to maintain a savings rate above 30% to improve your financial health score grade."
+      ],
+      isMock: true
+    };
+  }
+
+  try {
+    const model = getModel();
+    if (!model) {
+      throw new Error("Failed to initialize Gemini model");
+    }
+
+    const prompt = 
+      `You are FinNova AI Advisor. Analyze the user's financial context below and generate exactly 3-4 bulleted personalized financial recommendations/insights. ` +
+      `Focus on: \n` +
+      `- Actionable tips to improve their current Financial Health Score \n` +
+      `- Warning them about category budgets they are close to exceeding or have exceeded \n` +
+      `- Advising on detected anomalies or high spending categories \n` +
+      `- Suggesting steps to meet savings goals or adjust spending based on the next month's forecast. \n\n` +
+      `Rules: \n` +
+      `1. Use Indian Rupees (₹) for all examples, numbers, and calculations. \n` +
+      `2. Keep the recommendations brief, constructive, encouraging, and highly specific to their actual numbers. \n` +
+      `3. Return the response as a valid JSON array of strings ONLY. Example format: \n` +
+      `["Insight 1 text here", "Insight 2 text here", "Insight 3 text here"] \n` +
+      `Do NOT include any markdown code blocks (like \`\`\`json) or extra text outside the JSON array. Output raw JSON. \n\n` +
+      `[USER FINANCIAL CONTEXT] \n` +
+      `- Account Balance: ₹${userContext.balance} \n` +
+      `- Total Income: ₹${userContext.totalIncome} \n` +
+      `- Total Expenses: ₹${userContext.totalExpenses} \n` +
+      `- Financial Health Score: ${userContext.healthScore || "N/A"}/100 (Grade: ${userContext.healthGrade || "N/A"}) \n` +
+      `- Budgets Set: ${JSON.stringify(userContext.budgets)} \n` +
+      `- Anomalies Detected: ${JSON.stringify(userContext.anomalies)} \n` +
+      `- Next Month Forecast: ${JSON.stringify(userContext.forecast)} \n` +
+      `[END OF CONTEXT]`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+    
+    // Clean up any markdown blocks if the model wraps them anyway
+    const cleanText = text.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+    const insightsArray = JSON.parse(cleanText);
+
+    return {
+      insights: Array.isArray(insightsArray) ? insightsArray : [insightsArray],
+      isMock: false
+    };
+  } catch (error) {
+    console.error("Error generating insights from Gemini:", error.message);
+    // Fallback to rules-based insights if LLM fails
+    const mockInsights = [
+      `Your current balance is ₹${userContext.balance.toLocaleString('en-IN')}. Keep tracking your daily transactions.`,
+    ];
+    if (userContext.healthScore !== null && userContext.healthScore < 60) {
+      mockInsights.push("Your financial health score is under 60. We recommend scaling back on non-essential spending (Wants) to improve budget adherence.");
+    } else {
+      mockInsights.push("Excellent work maintaining a stable financial health score. Consider allocating excess savings toward active goals.");
+    }
+    if (Array.isArray(userContext.budgets) && userContext.budgets.length > 0) {
+      mockInsights.push("Review your active category budgets on the Dashboard to verify you are staying within limits.");
+    } else {
+      mockInsights.push("Create a category budget on the Budgets page to start analyzing your spending limits.");
+    }
+    return {
+      insights: mockInsights,
+      isMock: true,
+      error: error.message
+    };
+  }
+};
+
 module.exports = {
-  generateChatResponse
+  generateChatResponse,
+  generateInsights
 };

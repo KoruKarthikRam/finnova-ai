@@ -1,6 +1,6 @@
 const { checkAiServiceHealth, classifyDescription, detectAnomalies, getForecast } = require("../services/aiService");
 const transactionService = require("../services/transactionService");
-const { generateChatResponse } = require("../services/geminiService");
+const { generateChatResponse, generateInsights } = require("../services/geminiService");
 const budgetService = require("../services/budgetService");
 const healthService = require("../services/healthService");
 
@@ -153,10 +153,97 @@ const chatWithAssistant = async (req, res) => {
   }
 };
 
+const getAiInsights = async (req, res) => {
+  try {
+    const transactions = await transactionService.getAllTransactions(req.user.id);
+    
+    // Calculate current month's income, expenses, balance
+    const current = new Date();
+    const currentMonth = current.getMonth() + 1;
+    const currentYear = current.getFullYear();
+    
+    const currentMonthTransactions = transactions.filter(t => {
+      const d = new Date(t.date);
+      return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+    });
+
+    const totalIncome = currentMonthTransactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, item) => sum + item.amount, 0);
+
+    const totalExpenses = currentMonthTransactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, item) => sum + item.amount, 0);
+
+    const balance = totalIncome - totalExpenses;
+
+    // Fetch active budgets
+    const budgets = await budgetService.getBudgets(req.user.id, currentMonth, currentYear);
+    
+    // Fetch health score
+    const healthResult = await healthService.calculateHealthScore(req.user.id);
+
+    // Fetch anomalies & forecast (gracefully fallback if microservice is offline)
+    let anomalies = [];
+    let forecast = null;
+    
+    const formattedTransactions = transactions.map((t) => ({
+      id: t._id.toString(),
+      amount: t.amount,
+      category: t.category,
+      type: t.type,
+      date: t.date.toISOString(),
+      description: t.description || "",
+    }));
+
+    try {
+      const anomalyRes = await detectAnomalies(formattedTransactions);
+      if (anomalyRes.success) {
+        anomalies = anomalyRes.anomalies || [];
+      }
+    } catch (err) {
+      console.warn("FastAPI anomalies service unreachable for insights. Skipping anomalies context.");
+    }
+
+    try {
+      const forecastRes = await getForecast(formattedTransactions);
+      if (forecastRes.success) {
+        forecast = forecastRes.forecast || null;
+      }
+    } catch (err) {
+      console.warn("FastAPI forecast service unreachable for insights. Skipping forecast context.");
+    }
+
+    const userContext = {
+      balance,
+      totalIncome,
+      totalExpenses,
+      healthScore: healthResult ? healthResult.score : null,
+      healthGrade: healthResult ? healthResult.grade : null,
+      budgets: budgets.map(b => ({ category: b.category, limit: b.limit })),
+      anomalies: anomalies.slice(0, 3).map(a => ({ amount: a.amount, category: a.category, reason: a.reason })),
+      forecast
+    };
+
+    const response = await generateInsights(userContext);
+    return res.json({
+      success: true,
+      ...response
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate financial insights",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   testAiServiceConnection,
   classifyTransaction,
   getTransactionAnomalies,
   getTransactionForecast,
   chatWithAssistant,
+  getAiInsights,
 };

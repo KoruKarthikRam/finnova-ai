@@ -38,6 +38,8 @@ function Dashboard() {
   const [error, setError] = useState("");
   const [anomalies, setAnomalies] = useState([]);
   const [forecastData, setForecastData] = useState(null);
+  const [insights, setInsights] = useState([]);
+  const [insightsLoading, setInsightsLoading] = useState(true);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -103,6 +105,23 @@ function Dashboard() {
           console.error("Failed to load forecast from AI service:", forecastErr);
           setForecastData(null);
         }
+
+        // Fetch insights independently to prevent delaying main dashboard load
+        const fetchInsights = async () => {
+          try {
+            setInsightsLoading(true);
+            const insightsRes = await axios.get("http://localhost:5000/api/ai/insights", config);
+            if (insightsRes.data.success) {
+              setInsights(insightsRes.data.insights || []);
+            }
+          } catch (insightsErr) {
+            console.error("Failed to load insights from Gemini service:", insightsErr);
+            setInsights([]);
+          } finally {
+            setInsightsLoading(false);
+          }
+        };
+        fetchInsights();
       } catch (err) {
         console.error(err);
         setError("Failed to fetch dashboard metrics");
@@ -386,6 +405,45 @@ function Dashboard() {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* AI Insights Panel */}
+          <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100 space-y-4">
+            <div className="flex justify-between items-center border-b border-slate-50 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🧠</span>
+                <h4 className="font-extrabold text-slate-800 tracking-tight text-base">Personalized AI Insights</h4>
+              </div>
+              <span className="flex items-center gap-1.5 text-xs font-semibold text-indigo-600 bg-indigo-50 border border-indigo-100/50 px-2.5 py-1 rounded-full shadow-xxs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                Powered by Gemini AI
+              </span>
+            </div>
+
+            {insightsLoading ? (
+              <div className="space-y-3 py-2">
+                <div className="h-4 bg-slate-100 rounded animate-pulse w-3/4"></div>
+                <div className="h-4 bg-slate-100 rounded animate-pulse w-5/6"></div>
+                <div className="h-4 bg-slate-100 rounded animate-pulse w-2/3"></div>
+              </div>
+            ) : insights.length === 0 ? (
+              <p className="text-sm text-slate-400 font-medium">No insights generated yet. Setup budgets and log transactions to see customized advice.</p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {insights.map((insight, idx) => (
+                  <div
+                    key={idx}
+                    className="p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex gap-3 hover:translate-x-0.5 hover:shadow-xxs transition duration-200"
+                  >
+                    <span className="text-lg shrink-0">💡</span>
+                    <p className="text-xs font-semibold text-slate-600 leading-relaxed">{insight}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Recharts Grid */}
