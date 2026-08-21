@@ -78,17 +78,25 @@ const generateChatResponse = async (message, history = [], userContext = null) =
     // Structure expected: { role: 'user' | 'model', parts: [{ text: string }] }
     const formattedHistory = [];
     if (Array.isArray(history)) {
+      let expectedRole = "user"; // Start with user
       for (const turn of history) {
-        if (turn.role && turn.content) {
+        let role = turn.role === "assistant" || turn.role === "model" ? "model" : "user";
+        let text = "";
+        
+        if (turn.content) {
+          text = turn.content;
+        } else if (turn.parts) {
+          text = typeof turn.parts === "string" ? turn.parts : (Array.isArray(turn.parts) && turn.parts[0]?.text) ? turn.parts[0].text : "";
+        }
+        
+        if (!text) continue;
+
+        if (role === expectedRole) {
           formattedHistory.push({
-            role: turn.role === "assistant" ? "model" : "user",
-            parts: [{ text: turn.content }]
+            role,
+            parts: [{ text }]
           });
-        } else if (turn.role && turn.parts) {
-          formattedHistory.push({
-            role: turn.role === "assistant" ? "model" : turn.role,
-            parts: typeof turn.parts === "string" ? [{ text: turn.parts }] : turn.parts
-          });
+          expectedRole = expectedRole === "user" ? "model" : "user";
         }
       }
     }
