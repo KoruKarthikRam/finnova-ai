@@ -58,11 +58,22 @@ const getForecast = async (transactions) => {
   }
 };
 
+const searchKnowledge = async (query, limit = 3) => {
+  try {
+    const response = await aiServiceClient.post("/search-knowledge", { query, limit });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service search knowledge failed:", error.message);
+    return { success: false, matches: [] };
+  }
+};
+
 module.exports = {
   checkAiServiceHealth,
   analyzeTransactions,
   classifyDescription,
   detectAnomalies,
   getForecast,
+  searchKnowledge,
 };
 

@@ -1,4 +1,4 @@
-const { checkAiServiceHealth, classifyDescription, detectAnomalies, getForecast } = require("../services/aiService");
+const { checkAiServiceHealth, classifyDescription, detectAnomalies, getForecast, searchKnowledge } = require("../services/aiService");
 const transactionService = require("../services/transactionService");
 const { generateChatResponse, generateInsights } = require("../services/geminiService");
 const budgetService = require("../services/budgetService");
@@ -139,7 +139,17 @@ const chatWithAssistant = async (req, res) => {
       }
     }
 
-    const response = await generateChatResponse(message, history, userContext);
+    let ragContext = null;
+    try {
+      const searchRes = await searchKnowledge(message);
+      if (searchRes && searchRes.success && searchRes.matches) {
+        ragContext = searchRes.matches;
+      }
+    } catch (ragError) {
+      console.warn("Failed to fetch RAG context from knowledge base:", ragError.message);
+    }
+
+    const response = await generateChatResponse(message, history, userContext, ragContext);
     return res.json({
       success: true,
       ...response

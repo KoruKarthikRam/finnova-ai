@@ -452,6 +452,129 @@ def forecast_expenses(payload: ForecastRequest):
         "historical_trend": historical_trend
     }
 
+
+import os
+from sklearn.metrics.pairwise import cosine_similarity
+
+# --- KNOWLEDGE BASE / RAG MODULE ---
+KNOWLEDGE_DIR = os.path.join(os.path.dirname(__file__), "knowledge_base")
+kb_chunks = []
+kb_vectorizer = None
+kb_tfidf_matrix = None
+
+def init_knowledge_base():
+    global kb_chunks, kb_vectorizer, kb_tfidf_matrix
+    kb_chunks = []
+    
+    if not os.path.exists(KNOWLEDGE_DIR):
+        print(f"Knowledge base directory '{KNOWLEDGE_DIR}' not found. Creating empty dir.")
+        os.makedirs(KNOWLEDGE_DIR, exist_ok=True)
+        return
+
+    # Scan and parse markdown files
+    for filename in os.listdir(KNOWLEDGE_DIR):
+        if filename.endswith(".md") or filename.endswith(".txt"):
+            filepath = os.path.join(KNOWLEDGE_DIR, filename)
+            try:
+                with open(filepath, "r", encoding="utf-8") as f:
+                    content = f.read()
+                
+                # Split content into logical paragraphs (double newlines)
+                raw_paras = content.split("\n\n")
+                
+                # Combine headers with their following paragraph to maintain context
+                current_header = ""
+                for para in raw_paras:
+                    para_clean = para.strip()
+                    if not para_clean:
+                        continue
+                    
+                    # Split paragraph into lines to separate inline headers from body text
+                    lines = para_clean.split("\n")
+                    body_lines = []
+                    for line in lines:
+                        line_clean = line.strip()
+                        if line_clean.startswith("#"):
+                            current_header = line_clean
+                        else:
+                            body_lines.append(line_clean)
+                    
+                    if body_lines:
+                        body_text = "\n".join(body_lines)
+                        chunk_text = f"{current_header}\n{body_text}" if current_header else body_text
+                        kb_chunks.append({
+                            "text": chunk_text.strip(),
+                            "source": filename
+                        })
+            except Exception as e:
+                print(f"Error loading knowledge file {filename}: {str(e)}")
+
+    if kb_chunks:
+        # Fit vectorizer on all text chunks
+        texts = [chunk["text"] for chunk in kb_chunks]
+        kb_vectorizer = TfidfVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english')
+        kb_tfidf_matrix = kb_vectorizer.fit_transform(texts)
+        print(f"Knowledge base successfully indexed with {len(kb_chunks)} chunks.")
+    else:
+        print("Knowledge base is empty. Vector indexing skipped.")
+
+# Run initialization
+init_knowledge_base()
+
+class SearchRequest(BaseModel):
+    query: str
+    limit: Optional[int] = 3
+
+@app.post("/search-knowledge")
+def search_knowledge(payload: SearchRequest):
+    global kb_chunks, kb_vectorizer, kb_tfidf_matrix
+    query = payload.query.strip()
+    limit = payload.limit
+
+    if not query or not kb_chunks or kb_vectorizer is None or kb_tfidf_matrix is None:
+        return {
+            "success": True,
+            "matches": []
+        }
+
+    try:
+        # Transform the query
+        query_vector = kb_vectorizer.transform([query])
+        
+        # Calculate cosine similarity
+        similarities = cosine_similarity(query_vector, kb_tfidf_matrix)[0]
+        
+        # Get sorted indices descending
+        sorted_indices = np.argsort(similarities)[::-1]
+        
+        matches = []
+        for idx in sorted_indices:
+            score = float(similarities[idx])
+            # Filter out chunks with 0 or near-zero similarity to avoid noise
+            if score < 0.02:
+                continue
+                
+            matches.append({
+                "text": kb_chunks[idx]["text"],
+                "source": kb_chunks[idx]["source"],
+                "score": round(score, 4)
+            })
+            
+            if len(matches) >= limit:
+                break
+                
+        return {
+            "success": True,
+            "matches": matches
+        }
+    except Exception as e:
+        print("Knowledge search failed:", str(e))
+        return {
+            "success": False,
+            "error": str(e),
+            "matches": []
+        }
+
 if __name__ == "__main__":
     # pyrefly: ignore [missing-import]
     import uvicorn

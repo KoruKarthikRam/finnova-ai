@@ -56,7 +56,7 @@ const getModel = () => {
 /**
  * Generates advice from Gemini API, supporting conversation history and user financial context.
  */
-const generateChatResponse = async (message, history = [], userContext = null) => {
+const generateChatResponse = async (message, history = [], userContext = null, ragContext = null) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "your_gemini_api_key_here" || !apiKey.trim()) {
     return {
@@ -101,23 +101,34 @@ const generateChatResponse = async (message, history = [], userContext = null) =
       }
     }
 
-    // Inject user context if available
-    let finalPrompt = message;
+    // Inject user context and RAG context if available
+    let finalPrompt = "";
+    if (ragContext && Array.isArray(ragContext) && ragContext.length > 0) {
+      finalPrompt += `[KNOWLEDGE BASE CONTEXT]\n`;
+      ragContext.forEach((match) => {
+        finalPrompt += `Source document: ${match.source}\nContent excerpt:\n${match.text}\n---\n`;
+      });
+      finalPrompt += `[END OF KNOWLEDGE BASE CONTEXT]\n\n`;
+    }
+
     if (userContext) {
       const activeBudgetsStr = Array.isArray(userContext.budgets) && userContext.budgets.length > 0
         ? userContext.budgets.map(b => `${b.category}: limit ₹${b.limit}`).join(", ")
         : "None";
 
-      const contextString = `[USER FINANCIAL CONTEXT]\n` +
+      finalPrompt += `[USER FINANCIAL CONTEXT]\n` +
         `- Current Account Balance: ₹${userContext.balance || 0}\n` +
         `- Total Income this month: ₹${userContext.totalIncome || 0}\n` +
         `- Total Expenses this month: ₹${userContext.totalExpenses || 0}\n` +
         `- Active Budgets: ${activeBudgetsStr}\n` +
         `- Financial Health Score: ${userContext.healthScore || "N/A"}/100\n` +
-        `[END OF CONTEXT]\n\n` +
-        `User Message: ${message}`;
-      
-      finalPrompt = contextString;
+        `[END OF CONTEXT]\n\n`;
+    }
+
+    if (finalPrompt) {
+      finalPrompt += `User Message: ${message}`;
+    } else {
+      finalPrompt = message;
     }
 
     const chat = model.startChat({
