@@ -45,7 +45,7 @@ function SmartRecommendations() {
       case "High":
         return "bg-amber-500/20 text-amber-300 border-amber-500/30";
       case "Medium":
-        return "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
+        return "bg-cyan-500/20 text-cyan-300 border-cyan-500/30";
       default:
         return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
     }
@@ -63,29 +63,29 @@ function SmartRecommendations() {
   if (error || recommendations.length === 0) return null;
 
   return (
-    <div className="rounded-3xl glass-card p-6 sm:p-8 border border-indigo-500/20 shadow-xl space-y-6 relative overflow-hidden">
+    <div className="rounded-3xl glass-card p-6 sm:p-8 border border-cyan-500/20 shadow-xl space-y-6 relative overflow-hidden">
       
       {/* Background Glow */}
-      <div className="absolute right-0 top-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none"></div>
+      <div className="absolute right-0 top-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-cyan-500/10 blur-[80px] pointer-events-none"></div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 relative z-10 border-b border-slate-800/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl">🧠</span>
-            <h3 className="text-lg font-extrabold text-white tracking-tight">Smart Recommendations for You</h3>
+            <h3 className="text-base font-extrabold text-white tracking-tight">Smart Recommendations for You</h3>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Personalized financial masterclasses generated dynamically from your live savings rate and transactions.
+          <p className="text-xs text-slate-400 mt-0.5 font-medium">
+            Personalized financial masterclasses generated dynamically from your live telemetry metrics.
           </p>
         </div>
 
         {metrics && (
-          <div className="flex gap-2 text-xxs font-bold shrink-0">
-            <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-indigo-300">
+          <div className="flex gap-2 text-xxs font-extrabold shrink-0">
+            <span className="px-3 py-1 rounded-full bg-[#0b0f17] border border-slate-800 text-cyan-300">
               Savings Rate: {metrics.savingsRate}%
             </span>
-            <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-300">
+            <span className="px-3 py-1 rounded-full bg-[#0b0f17] border border-slate-800 text-emerald-300">
               Health: {metrics.healthScore}/100
             </span>
           </div>
@@ -102,24 +102,24 @@ function SmartRecommendations() {
           >
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-xxs font-extrabold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <span className="px-2.5 py-0.5 rounded-full text-xxs font-extrabold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
                   {rec.category}
                 </span>
-                <span className={`px-2.5 py-0.5 rounded-full text-xxs font-bold border ${getBadgeStyle(rec.priority)}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xxs font-extrabold border ${getBadgeStyle(rec.priority)}`}>
                   {rec.priority} Priority
                 </span>
               </div>
 
-              <h4 className="text-sm font-bold text-white group-hover:text-indigo-300 transition leading-snug">
+              <h4 className="text-sm font-bold text-white group-hover:text-cyan-300 transition leading-snug">
                 {rec.title}
               </h4>
 
-              <p className="text-xxs text-slate-400 leading-relaxed">
+              <p className="text-xxs text-slate-400 leading-relaxed font-medium">
                 💡 {rec.reason}
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
+            <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-bold text-cyan-400 group-hover:text-cyan-300">
               <span>{rec.actionText || "Start Module"}</span>
               <span className="group-hover:translate-x-1 transition">→</span>
             </div>
