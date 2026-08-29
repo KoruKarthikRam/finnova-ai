@@ -271,12 +271,20 @@ function Dashboard() {
           <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Financial Dashboard</h1>
           <p className="mt-2 text-slate-500">Real-time charts, spending analysis, and AI insights.</p>
         </div>
-        <Link
-          to="/transactions"
-          className="w-fit rounded-xl bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-indigo-700 shadow-sm hover:shadow transition cursor-pointer"
-        >
-          Manage Transactions 💸
-        </Link>
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/reports"
+            className="w-fit rounded-xl bg-white border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-700 hover:text-indigo-600 hover:border-indigo-200 shadow-xxs transition cursor-pointer flex items-center gap-1.5"
+          >
+            <span>📄</span> Download Monthly Report
+          </Link>
+          <Link
+            to="/transactions"
+            className="w-fit rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-700 shadow-sm hover:shadow transition cursor-pointer"
+          >
+            Manage Transactions 💸
+          </Link>
+        </div>
       </div>
 
       {transactions.length === 0 ? (

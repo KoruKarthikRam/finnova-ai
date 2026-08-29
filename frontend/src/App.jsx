@@ -9,6 +9,7 @@ import Budget from "./pages/Budget";
 import Goals from "./pages/Goals";
 import Learning from "./pages/Learning";
 import Quiz from "./pages/Quiz";
+import Reports from "./pages/Reports";
 import Assistant from "./pages/Assistant";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -80,6 +81,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Quiz />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reports"
+            element={
+              <ProtectedRoute>
+                <Reports />
               </ProtectedRoute>
             }
           />

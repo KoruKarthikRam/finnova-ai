@@ -45,6 +45,7 @@ function Navbar() {
               <Link to="/goals" className="hover:text-indigo-600 transition">Goals</Link>
               <Link to="/learning" className="hover:text-indigo-600 transition">Learning</Link>
               <Link to="/quiz" className="hover:text-indigo-600 transition">AI Quiz</Link>
+              <Link to="/reports" className="hover:text-indigo-600 transition">Reports</Link>
               <Link to="/assistant" className="hover:text-indigo-600 transition">AI Assistant</Link>
             </div>
             <div className="h-6 w-px bg-slate-200"></div>
