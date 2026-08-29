@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import Dashboard from "./pages/Dashboard";
@@ -111,6 +112,8 @@ function App() {
           />
         </Routes>
       </main>
+
+      <Footer />
     </BrowserRouter>
   );
 }
