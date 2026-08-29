@@ -1,36 +1,6 @@
 const { checkAiServiceHealth, classifyDescription, detectAnomalies, getForecast, searchKnowledge } = require("../services/aiService");
 const transactionService = require("../services/transactionService");
 const { generateChatResponse, generateInsights, generateQuiz } = require("../services/geminiService");
-
-const generateTopicQuiz = async (req, res) => {
-  const { topic, difficulty } = req.body;
-  try {
-    const result = await generateQuiz(topic || "Budgeting", difficulty || "Beginner");
-    return res.json({
-      success: true,
-      topic: topic || "Budgeting",
-      difficulty: difficulty || "Beginner",
-      ...result
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to generate AI quiz",
-      error: error.message,
-    });
-  }
-};
-
-module.exports = {
-  testAiServiceConnection,
-  classifyTransaction,
-  getTransactionAnomalies,
-  getTransactionForecast,
-  chatWithAssistant,
-  getAiInsights,
-  generateTopicQuiz,
-};
-
 const budgetService = require("../services/budgetService");
 const healthService = require("../services/healthService");
 
@@ -279,6 +249,25 @@ const getAiInsights = async (req, res) => {
   }
 };
 
+const generateTopicQuiz = async (req, res) => {
+  const { topic, difficulty } = req.body;
+  try {
+    const result = await generateQuiz(topic || "Budgeting", difficulty || "Beginner");
+    return res.json({
+      success: true,
+      topic: topic || "Budgeting",
+      difficulty: difficulty || "Beginner",
+      ...result
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate AI quiz",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   testAiServiceConnection,
   classifyTransaction,
@@ -286,4 +275,6 @@ module.exports = {
   getTransactionForecast,
   chatWithAssistant,
   getAiInsights,
+  generateTopicQuiz,
 };
+
