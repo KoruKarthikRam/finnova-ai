@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Learning() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCalculator, setActiveCalculator] = useState("50-30-20");
@@ -392,18 +394,26 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
             Master budgeting, tax optimization, mutual funds, loans, and wealth compounding with beginner-friendly guides tailored to Indian financial laws.
           </p>
 
-          {/* User Progress Bar */}
-          <div className="pt-4 max-w-md">
-            <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-              <span className="text-indigo-200">Your Financial Literacy Progress</span>
-              <span className="text-emerald-400">{completedLessons.length} / {lessons.length} Modules ({completionPercentage}%)</span>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-4">
+            <div className="flex-1 max-w-md w-full">
+              <div className="flex justify-between items-center text-xs font-bold mb-1.5">
+                <span className="text-indigo-200">Your Financial Literacy Progress</span>
+                <span className="text-emerald-400">{completedLessons.length} / {lessons.length} Modules ({completionPercentage}%)</span>
+              </div>
+              <div className="h-3 w-full bg-slate-800/80 rounded-full overflow-hidden border border-slate-700">
+                <div
+                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 rounded-full"
+                  style={{ width: `${completionPercentage}%` }}
+                ></div>
+              </div>
             </div>
-            <div className="h-3 w-full bg-slate-800/80 rounded-full overflow-hidden border border-slate-700">
-              <div
-                className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 rounded-full"
-                style={{ width: `${completionPercentage}%` }}
-              ></div>
-            </div>
+
+            <button
+              onClick={() => navigate("/quiz")}
+              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-extrabold text-xs shadow-md transition duration-200 cursor-pointer flex items-center gap-2 border border-indigo-400/30 shrink-0"
+            >
+              <span>🎯</span> Take AI Quiz
+            </button>
           </div>
         </div>
       </div>

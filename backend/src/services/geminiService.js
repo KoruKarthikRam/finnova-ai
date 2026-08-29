@@ -230,7 +230,360 @@ const generateInsights = async (userContext) => {
   }
 };
 
+/**
+ * Generates an AI-powered financial quiz for a specific topic & difficulty.
+ */
+const generateQuiz = async (topic = "Budgeting", difficulty = "Beginner") => {
+  const apiKey = process.env.GEMINI_API_KEY;
+  
+  // Fallback quiz generator function if LLM is unavailable
+  const getFallbackQuiz = (topicName) => {
+    const fallbacks = {
+      Budgeting: [
+        {
+          id: 1,
+          question: "Under the popular 50/30/20 rule, what percentage of your income should be allocated to essential 'Needs'?",
+          options: ["20%", "30%", "50%", "70%"],
+          correctAnswer: 2,
+          explanation: "The 50/30/20 rule recommends spending 50% of your net income on essential needs like rent, groceries, and utilities."
+        },
+        {
+          id: 2,
+          question: "Which of the following is considered a 'Want' in personal budgeting?",
+          options: ["House Rent", "Electricity Bill", "OTT Video Subscription", "Health Insurance"],
+          correctAnswer: 2,
+          explanation: "OTT subscriptions (like Netflix or Hotstar) are lifestyle choices, classifying them as 'Wants'."
+        },
+        {
+          id: 3,
+          question: "What is Zero-Based Budgeting?",
+          options: [
+            "Having ₹0 in your bank account at the end of the month",
+            "Assigning every Rupee of your income a specific job until Income minus Expenses equals Zero",
+            "Not spending any money on weekends",
+            "A budget method with 0% tax deductions"
+          ],
+          correctAnswer: 1,
+          explanation: "Zero-based budgeting assigns every single rupee of income to expenses, savings, or investments so remaining unallocated funds equal zero."
+        },
+        {
+          id: 4,
+          question: "Why should you automate your savings on payday rather than saving at the end of the month?",
+          options: [
+            "Banks charge extra fees if you save late",
+            "Payday automation enforces 'Pay Yourself First' before impulse spending occurs",
+            "Interest rates drop at the end of the month",
+            "It is required by Indian income tax laws"
+          ],
+          correctAnswer: 1,
+          explanation: "Automating savings on payday ensures you save before impulse lifestyle spending takes away your surplus."
+        },
+        {
+          id: 5,
+          question: "If your monthly income is ₹60,000, how much should be directed to Savings under 50/30/20?",
+          options: ["₹6,000", "₹12,000", "₹18,000", "₹30,000"],
+          correctAnswer: 1,
+          explanation: "20% of ₹60,000 equals ₹12,000 allocated for investments and emergency reserves."
+        }
+      ],
+      Taxes: [
+        {
+          id: 1,
+          question: "What is the maximum annual tax deduction limit available under Section 80C in India?",
+          options: ["₹1,00,000", "₹1,50,000", "₹2,00,000", "₹2,50,000"],
+          correctAnswer: 1,
+          explanation: "Section 80C allows taxpayers to claim up to ₹1,50,000 in total deductions per financial year."
+        },
+        {
+          id: 2,
+          question: "Which Section 80C investment option offers the shortest lock-in period of 3 years?",
+          options: ["Public Provident Fund (PPF)", "ELSS Mutual Funds", "Tax Saver Fixed Deposit", "National Savings Certificate"],
+          correctAnswer: 1,
+          explanation: "ELSS (Equity Linked Savings Scheme) mutual funds have a 3-year lock-in, the shortest among all Section 80C options."
+        },
+        {
+          id: 3,
+          question: "Under the New Tax Regime, what is the default Standard Deduction allowed for salaried employees?",
+          options: ["₹40,000", "₹50,000", "₹75,000", "₹1,00,000"],
+          correctAnswer: 2,
+          explanation: "As per recent Union Budget revisions, the New Tax Regime grants a flat standard deduction of ₹75,000."
+        },
+        {
+          id: 4,
+          question: "Section 80D of the Income Tax Act provides tax benefits for which of the following?",
+          options: ["Home Loan Principal Repayment", "Health Insurance Premium", "Children Tuition Fees", "Electric Vehicle Loans"],
+          correctAnswer: 1,
+          explanation: "Section 80D allows tax deductions on medical insurance premiums paid for self, family, and parents."
+        },
+        {
+          id: 5,
+          question: "Under Section 10(13A), HRA tax exemption is calculated as the minimum of how many key criteria?",
+          options: ["2 criteria", "3 criteria", "4 criteria", "5 criteria"],
+          correctAnswer: 1,
+          explanation: "HRA exemption is the minimum of: 1) Actual HRA received, 2) Rent paid minus 10% basic salary, 3) 50% (metro) or 40% (non-metro) basic salary."
+        }
+      ],
+      Savings: [
+        {
+          id: 1,
+          question: "How many months of essential living expenses should an emergency fund ideally cover for a salaried employee?",
+          options: ["1 to 2 months", "3 to 6 months", "12 to 24 months", "5 years"],
+          correctAnswer: 1,
+          explanation: "Financial advisors recommend keeping 3 to 6 months of essential living expenses in liquid emergency accounts."
+        },
+        {
+          id: 2,
+          question: "What is the primary characteristic of an ideal emergency fund vehicle?",
+          options: ["Maximum Stock Market Returns", "High Liquidity and Low Risk", "15-Year Mandatory Lock-In", "High Tax Deductions"],
+          correctAnswer: 1,
+          explanation: "Emergency funds must prioritize high liquidity (instant withdrawal capability) and capital safety over high market returns."
+        },
+        {
+          id: 3,
+          question: "What is the Rule of 72 used for in personal finance?",
+          options: [
+            "Calculating credit score limits",
+            "Estimating the number of years required to double your money at a given interest rate",
+            "Calculating monthly home loan EMIs",
+            "Determining your retirement age"
+          ],
+          correctAnswer: 1,
+          explanation: "Divide 72 by your annual interest rate to find roughly how many years it will take to double your investment."
+        },
+        {
+          id: 4,
+          question: "If an investment yields an annual return of 12%, approximately how many years will it take to double your money using the Rule of 72?",
+          options: ["4 years", "6 years", "10 years", "12 years"],
+          correctAnswer: 1,
+          explanation: "72 divided by 12 = 6 years to double your investment."
+        },
+        {
+          id: 5,
+          question: "Why should you avoid keeping your entire long-term savings in a regular 3% savings bank account?",
+          options: [
+            "Banks charge penalties for keeping money",
+            "Inflation (typically 5-6%) will erode your real purchasing power over time",
+            "Savings accounts do not allow UPI payments",
+            "It automatically gets locked after 1 year"
+          ],
+          correctAnswer: 1,
+          explanation: "If inflation rate is 6% and savings account interest is 3%, your money loses 3% of real purchasing power annually."
+        }
+      ],
+      Loans: [
+        {
+          id: 1,
+          question: "In India, what CIBIL credit score range is generally considered 'Excellent' by major banks?",
+          options: ["300 - 550", "550 - 650", "650 - 749", "750 - 900"],
+          correctAnswer: 3,
+          explanation: "A CIBIL score of 750 or above is considered excellent and qualifies borrowers for low interest rates."
+        },
+        {
+          id: 2,
+          question: "Which factor carries the highest weightage in calculating your CIBIL credit score?",
+          options: ["Your age", "Repayment history (paying bills/EMIs on time)", "Number of bank accounts owned", "Debit card usage"],
+          correctAnswer: 1,
+          explanation: "On-time payment history accounts for ~35% of your total credit score calculation."
+        },
+        {
+          id: 3,
+          question: "What is Credit Utilization Ratio?",
+          options: [
+            "The percentage of your total available credit limit that you are currently spending",
+            "The ratio of home loans to personal loans",
+            "The time it takes to get a loan approved",
+            "The interest rate charged on fixed loans"
+          ],
+          correctAnswer: 0,
+          explanation: "Credit utilization ratio measures how much of your total credit card limits you spend each billing cycle."
+        },
+        {
+          id: 4,
+          question: "What happens when you select a Floating Interest Rate home loan?",
+          options: [
+            "Your interest rate remains fixed for 20 years",
+            "Your interest rate changes periodically based on market benchmark rates like the RBI Repo Rate",
+            "You don't have to pay EMIs during market drops",
+            "Your loan tenure is fixed to 5 years"
+          ],
+          correctAnswer: 1,
+          explanation: "Floating rates adjust according to central bank policy benchmark rate changes over the loan tenure."
+        },
+        {
+          id: 5,
+          question: "What does the Debt Snowball method prioritize when paying off multiple debts?",
+          options: [
+            "Paying off the loan with the highest interest rate first",
+            "Paying off the smallest balance loan first to build psychological momentum",
+            "Ignoring small debts and paying only home loans",
+            "Converting all debts into credit card bills"
+          ],
+          correctAnswer: 1,
+          explanation: "The Debt Snowball method targets paying off smallest debt balances first for quick psychological wins."
+        }
+      ],
+      Investments: [
+        {
+          id: 1,
+          question: "What does SIP stand for in mutual fund investing?",
+          options: [
+            "Systematic Investment Plan",
+            "Secured Income Protection",
+            "Standard Interest Portfolio",
+            "Savings & Investment Partnership"
+          ],
+          correctAnswer: 0,
+          explanation: "SIP stands for Systematic Investment Plan, allowing disciplined recurring investments in mutual funds."
+        },
+        {
+          id: 2,
+          question: "What is Rupee Cost Averaging in SIP investments?",
+          options: [
+            "Buying more units when market prices drop and fewer units when prices rise",
+            "Converting Indian Rupees to US Dollars",
+            "Getting a guaranteed 15% fixed return every month",
+            "A tax exemption on stock dividends"
+          ],
+          correctAnswer: 0,
+          explanation: "Fixed monthly SIP amounts buy more fund units when market prices crash, averaging out overall purchase costs."
+        },
+        {
+          id: 3,
+          question: "What is the primary difference between Equity Mutual Funds and Debt Mutual Funds?",
+          options: [
+            "Equity funds invest in company shares (higher growth/risk), while Debt funds invest in fixed-income bonds (stable/lower risk)",
+            "Debt funds have a 15-year lock-in while equity funds have zero lock-in",
+            "Equity funds are issued only by the RBI",
+            "There is no difference"
+          ],
+          correctAnswer: 0,
+          explanation: "Equity funds invest in corporate shares for long-term growth, whereas Debt funds invest in government & corporate bonds for income stability."
+        },
+        {
+          id: 4,
+          question: "What is an Index Fund?",
+          options: [
+            "A fund actively managed by a fund manager picking stocks daily",
+            "A passive mutual fund that mirrors a specific market benchmark index like Nifty 50 or Sensex",
+            "A fund that only buys real estate properties",
+            "A government savings scheme with zero returns"
+          ],
+          correctAnswer: 1,
+          explanation: "Index funds passively replicate benchmark market indices like Nifty 50 with low expense ratios."
+        },
+        {
+          id: 5,
+          question: "Why are Direct Plan mutual funds generally better than Regular Plan mutual funds?",
+          options: [
+            "Direct plans do not pay distributor commissions, resulting in a lower expense ratio and higher net returns",
+            "Regular plans are illegal in India",
+            "Direct plans guarantee 20% annual returns",
+            "Regular plans carry no market risk"
+          ],
+          correctAnswer: 0,
+          explanation: "Direct plans bypass third-party broker commissions, passing the savings on to investors through lower expense ratios."
+        }
+      ],
+      Retirement: [
+        {
+          id: 1,
+          question: "Under the FIRE movement framework, what is the '25x Rule' for retirement planning?",
+          options: [
+            "You should retire at age 25",
+            "Your target retirement corpus should be at least 25 times your annual living expenses",
+            "You should invest in 25 different stocks",
+            "Your salary will double 25 times"
+          ],
+          correctAnswer: 1,
+          explanation: "The 25x Rule suggests saving 25 times your annual expenses to achieve financial independence."
+        },
+        {
+          id: 2,
+          question: "What extra tax deduction is available exclusively for contributions to the National Pension System (NPS) under Section 80CCD(1B)?",
+          options: ["₹10,000", "₹25,000", "₹50,000", "₹1,00,000"],
+          correctAnswer: 2,
+          explanation: "Section 80CCD(1B) provides an exclusive tax deduction of up to ₹50,000 over and above the ₹1.5L Section 80C limit."
+        },
+        {
+          id: 3,
+          question: "What is the standard Safe Withdrawal Rate (SWR) percentage used in long-term retirement planning?",
+          options: ["4% per year", "12% per year", "25% per year", "50% per year"],
+          correctAnswer: 0,
+          explanation: "The 4% rule allows retirees to withdraw 4% of their initial portfolio annually (adjusted for inflation) without running out of money."
+        },
+        {
+          id: 4,
+          question: "What tax status does the Public Provident Fund (PPF) hold in India?",
+          options: ["Fully Taxable", "Taxed on Maturity", "Exempt-Exempt-Exempt (EEE)", "Taxed at 30%"],
+          correctAnswer: 2,
+          explanation: "PPF enjoys EEE status: contribution is tax deductible, interest earned is tax-free, and maturity amount is 100% tax-free."
+        },
+        {
+          id: 5,
+          question: "In the Employees' Provident Fund (EPF), what percentage of a salaried employee's basic salary is deducted monthly for provident fund savings?",
+          options: ["5%", "8%", "12%", "20%"],
+          correctAnswer: 2,
+          explanation: "Standard EPF contribution requires 12% of basic salary + DA from the employee, matched equally by the employer."
+        }
+      ]
+    };
+
+    return fallbacks[topicName] || fallbacks["Budgeting"];
+  };
+
+  if (!apiKey || apiKey === "your_gemini_api_key_here" || !apiKey.trim()) {
+    return {
+      quiz: getFallbackQuiz(topic),
+      isMock: true
+    };
+  }
+
+  try {
+    const model = getModel();
+    if (!model) {
+      return { quiz: getFallbackQuiz(topic), isMock: true };
+    }
+
+    const prompt = 
+      `You are FinNova AI Quiz Master. Generate a 5-question multiple choice quiz on the personal finance topic '${topic}' at '${difficulty}' level for Indian users. \n` +
+      `Rules: \n` +
+      `1. Format output ONLY as a valid JSON array of 5 objects. \n` +
+      `2. Each object MUST contain these exact fields: \n` +
+      `   - "id": number (1 to 5) \n` +
+      `   - "question": string \n` +
+      `   - "options": array of 4 strings \n` +
+      `   - "correctAnswer": number (0-based index: 0, 1, 2, or 3 corresponding to the correct string in options) \n` +
+      `   - "explanation": string (clear 1-2 sentence explanation of why the answer is correct with Indian financial context/₹ where relevant). \n` +
+      `3. Do NOT include markdown blocks (\`\`\`json). Output raw clean JSON string ONLY. \n`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text().trim();
+    
+    const cleanText = text.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+    const quizArray = JSON.parse(cleanText);
+
+    if (Array.isArray(quizArray) && quizArray.length > 0) {
+      return {
+        quiz: quizArray,
+        isMock: false
+      };
+    } else {
+      return { quiz: getFallbackQuiz(topic), isMock: true };
+    }
+  } catch (error) {
+    console.error("Error generating quiz from Gemini:", error.message);
+    return {
+      quiz: getFallbackQuiz(topic),
+      isMock: true,
+      error: error.message
+    };
+  }
+};
+
 module.exports = {
   generateChatResponse,
-  generateInsights
+  generateInsights,
+  generateQuiz
 };
+
