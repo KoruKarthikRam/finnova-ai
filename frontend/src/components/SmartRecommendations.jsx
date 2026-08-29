@@ -41,21 +41,21 @@ function SmartRecommendations() {
   const getBadgeStyle = (priority) => {
     switch (priority) {
       case "Critical":
-        return "bg-rose-50 text-rose-600 border-rose-200";
+        return "bg-rose-500/20 text-rose-300 border-rose-500/30";
       case "High":
-        return "bg-amber-50 text-amber-600 border-amber-200";
+        return "bg-amber-500/20 text-amber-300 border-amber-500/30";
       case "Medium":
-        return "bg-indigo-50 text-indigo-600 border-indigo-200";
+        return "bg-indigo-500/20 text-indigo-300 border-indigo-500/30";
       default:
-        return "bg-emerald-50 text-emerald-600 border-emerald-200";
+        return "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
     }
   };
 
   if (isLoading) {
     return (
-      <div className="rounded-3xl border border-slate-100 bg-white p-6 shadow-sm animate-pulse space-y-4">
-        <div className="h-5 bg-slate-200 rounded w-1/3"></div>
-        <div className="h-20 bg-slate-100 rounded-2xl"></div>
+      <div className="rounded-3xl glass-card p-6 border border-slate-800 animate-pulse space-y-3">
+        <div className="h-5 bg-slate-800 rounded w-1/3"></div>
+        <div className="h-16 bg-slate-800/60 rounded-2xl"></div>
       </div>
     );
   }
@@ -63,27 +63,29 @@ function SmartRecommendations() {
   if (error || recommendations.length === 0) return null;
 
   return (
-    <div className="rounded-3xl border border-slate-100 bg-gradient-to-br from-indigo-900 via-slate-900 to-violet-950 p-6 sm:p-8 text-white shadow-xl space-y-6 relative overflow-hidden">
-      <div className="absolute right-0 top-0 -mr-12 -mt-12 w-64 h-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+    <div className="rounded-3xl glass-card p-6 sm:p-8 border border-indigo-500/20 shadow-xl space-y-6 relative overflow-hidden">
+      
+      {/* Background Glow */}
+      <div className="absolute right-0 top-0 -mr-16 -mt-16 w-72 h-72 rounded-full bg-indigo-500/10 blur-[80px] pointer-events-none"></div>
 
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 relative z-10 border-b border-slate-800 pb-4">
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 relative z-10 border-b border-slate-800/80 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl">🧠</span>
-            <h3 className="text-xl font-extrabold tracking-tight">Smart Recommendations for You</h3>
+            <h3 className="text-lg font-extrabold text-white tracking-tight">Smart Recommendations for You</h3>
           </div>
-          <p className="text-xs text-slate-300 mt-1">
+          <p className="text-xs text-slate-400 mt-0.5">
             Personalized financial masterclasses generated dynamically from your live savings rate and transactions.
           </p>
         </div>
 
         {metrics && (
           <div className="flex gap-2 text-xxs font-bold shrink-0">
-            <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-indigo-300">
+            <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-indigo-300">
               Savings Rate: {metrics.savingsRate}%
             </span>
-            <span className="px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700 text-emerald-300">
+            <span className="px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-emerald-300">
               Health: {metrics.healthScore}/100
             </span>
           </div>
@@ -96,14 +98,14 @@ function SmartRecommendations() {
           <div
             key={rec.id}
             onClick={() => navigate(`/learning`)}
-            className="group rounded-2xl bg-slate-800/60 hover:bg-slate-800 border border-slate-700/60 p-5 shadow-sm transition duration-200 flex flex-col justify-between cursor-pointer space-y-3"
+            className="group glass-card glass-card-hover rounded-2xl p-5 border border-slate-800/80 shadow-sm transition duration-200 flex flex-col justify-between cursor-pointer space-y-3"
           >
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="px-2.5 py-0.5 rounded-full text-xxs font-extrabold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-400/20">
+                <span className="px-2.5 py-0.5 rounded-full text-xxs font-extrabold uppercase tracking-wider bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
                   {rec.category}
                 </span>
-                <span className={`px-2 py-0.5 rounded-full text-xxs font-bold border ${getBadgeStyle(rec.priority)}`}>
+                <span className={`px-2.5 py-0.5 rounded-full text-xxs font-bold border ${getBadgeStyle(rec.priority)}`}>
                   {rec.priority} Priority
                 </span>
               </div>
@@ -112,12 +114,12 @@ function SmartRecommendations() {
                 {rec.title}
               </h4>
 
-              <p className="text-xxs text-slate-300 leading-relaxed">
+              <p className="text-xxs text-slate-400 leading-relaxed">
                 💡 {rec.reason}
               </p>
             </div>
 
-            <div className="pt-3 border-t border-slate-700/50 flex items-center justify-between text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
+            <div className="pt-3 border-t border-slate-800/60 flex items-center justify-between text-xs font-bold text-indigo-400 group-hover:text-indigo-300">
               <span>{rec.actionText || "Start Module"}</span>
               <span className="group-hover:translate-x-1 transition">→</span>
             </div>

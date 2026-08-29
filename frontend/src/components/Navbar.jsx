@@ -29,57 +29,96 @@ function Navbar() {
     navigate("/");
   };
 
-  return (
-    <nav className="bg-white border-b px-8 py-4 flex items-center justify-between shadow-sm">
-      <Link to="/" className="text-2xl font-bold text-indigo-600 hover:text-indigo-800 transition duration-200">
-        FinNova AI
-      </Link>
+  const navLinks = [
+    { path: "/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/transactions", label: "Transactions", icon: "💸" },
+    { path: "/budget", label: "Budget", icon: "⚖️" },
+    { path: "/goals", label: "Goals", icon: "🎯" },
+    { path: "/learning", label: "Learning", icon: "🎓" },
+    { path: "/quiz", label: "AI Quiz", icon: "✍️" },
+    { path: "/reports", label: "Reports", icon: "📄" },
+    { path: "/subscriptions", label: "Subscriptions", icon: "💳" },
+    { path: "/assistant", label: "AI Assistant", icon: "🤖" },
+  ];
 
-      <div className="flex items-center gap-6">
-        {isLoggedIn ? (
-          <>
-            <div className="flex gap-5 text-xs font-bold text-slate-600 items-center">
-              <Link to="/dashboard" className={`transition py-1 border-b-2 ${location.pathname === "/dashboard" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Dashboard</Link>
-              <Link to="/transactions" className={`transition py-1 border-b-2 ${location.pathname === "/transactions" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Transactions</Link>
-              <Link to="/budget" className={`transition py-1 border-b-2 ${location.pathname === "/budget" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Budget</Link>
-              <Link to="/goals" className={`transition py-1 border-b-2 ${location.pathname === "/goals" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Goals</Link>
-              <Link to="/learning" className={`transition py-1 border-b-2 ${location.pathname === "/learning" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Learning</Link>
-              <Link to="/quiz" className={`transition py-1 border-b-2 ${location.pathname === "/quiz" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>AI Quiz</Link>
-              <Link to="/reports" className={`transition py-1 border-b-2 ${location.pathname === "/reports" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Reports</Link>
-              <Link to="/subscriptions" className={`transition py-1 border-b-2 ${location.pathname === "/subscriptions" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>Subscriptions</Link>
-              <Link to="/assistant" className={`transition py-1 border-b-2 ${location.pathname === "/assistant" ? "border-indigo-600 text-indigo-600 font-extrabold" : "border-transparent hover:text-indigo-600"}`}>AI Assistant</Link>
+  return (
+    <nav className="print:hidden glass-nav sticky top-0 z-50 px-6 py-3.5 transition-all">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
+        
+        {/* Brand Logo */}
+        <Link to="/" className="flex items-center gap-2 group">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-500 p-0.5 shadow-lg group-hover:scale-105 transition">
+            <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center text-lg font-black text-white">
+              ⚡
             </div>
-            <div className="h-5 w-px bg-slate-200"></div>
-            <div className="flex items-center gap-3">
-              <span className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xxs font-bold">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                AI Core Active
-              </span>
-              <span className="text-xs font-bold text-slate-700">Hi, {userName || "User"}</span>
-              <button
-                onClick={handleLogout}
-                className="rounded-lg bg-slate-100 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-200 transition duration-200 cursor-pointer"
-              >
-                Logout
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="flex gap-4">
-            <Link
-              to="/login"
-              className="rounded-lg px-4 py-1.5 text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition"
-            >
-              Login
-            </Link>
-            <Link
-              to="/register"
-              className="rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700 transition shadow-sm"
-            >
-              Register
-            </Link>
           </div>
-        )}
+          <span className="text-xl font-extrabold text-white tracking-tight group-hover:opacity-90 transition">
+            FinNova <span className="text-gradient-indigo">AI</span>
+          </span>
+        </Link>
+
+        {/* Navigation Items & User Controls */}
+        <div className="flex items-center gap-4">
+          {isLoggedIn ? (
+            <>
+              {/* Desktop Nav Links */}
+              <div className="hidden lg:flex items-center gap-1 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800/80 shadow-inner">
+                {navLinks.map((link) => {
+                  const isActive = location.pathname === link.path;
+                  return (
+                    <Link
+                      key={link.path}
+                      to={link.path}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
+                        isActive
+                          ? "bg-indigo-600 text-white shadow-md glow-indigo"
+                          : "text-slate-400 hover:text-white hover:bg-slate-800/60"
+                      }`}
+                    >
+                      <span className="text-xs">{link.icon}</span>
+                      <span>{link.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+
+              <div className="h-6 w-px bg-slate-800 hidden lg:block"></div>
+
+              {/* User Avatar & Logout */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 bg-slate-900/80 px-3 py-1.5 rounded-xl border border-slate-800 text-xs font-bold text-slate-300">
+                  <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-extrabold text-xxs">
+                    {userName ? userName.charAt(0).toUpperCase() : "U"}
+                  </div>
+                  <span className="hidden sm:inline text-slate-200">{userName || "User"}</span>
+                </div>
+
+                <button
+                  onClick={handleLogout}
+                  className="rounded-xl bg-slate-900 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-800 hover:border-rose-500/30 px-3.5 py-1.5 text-xs font-bold transition duration-200 cursor-pointer"
+                >
+                  Logout
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center gap-3">
+              <Link
+                to="/login"
+                className="px-4 py-2 text-xs font-bold text-slate-300 hover:text-white transition"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/register"
+                className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 px-4 py-2 text-xs font-extrabold text-white shadow-md glow-indigo transition duration-200"
+              >
+                Get Started Free
+              </Link>
+            </div>
+          )}
+        </div>
+
       </div>
     </nav>
   );
