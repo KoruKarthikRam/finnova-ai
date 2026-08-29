@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import SmartRecommendations from "../components/SmartRecommendations";
 import {
   ResponsiveContainer,
   PieChart,
@@ -298,6 +299,9 @@ function Dashboard() {
       ) : (
         /* Main Dashboard Content */
         <>
+          {/* Smart Recommendations Engine Widget */}
+          <SmartRecommendations />
+
           {exceededBudgets.length > 0 && (
             <div className="rounded-2xl bg-rose-50 border border-rose-100 p-5 text-rose-700 space-y-2 shadow-sm">
               <h4 className="font-bold flex items-center gap-2 text-base">
