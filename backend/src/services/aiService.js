@@ -68,6 +68,16 @@ const searchKnowledge = async (query, limit = 3) => {
   }
 };
 
+const detectSubscriptions = async (transactions) => {
+  try {
+    const response = await aiServiceClient.post("/subscriptions", { transactions });
+    return response.data;
+  } catch (error) {
+    console.error("AI Service subscription detection failed:", error.message);
+    return { success: false, subscriptions: [], total_monthly_overhead: 0.0 };
+  }
+};
+
 module.exports = {
   checkAiServiceHealth,
   analyzeTransactions,
@@ -75,5 +85,7 @@ module.exports = {
   detectAnomalies,
   getForecast,
   searchKnowledge,
+  detectSubscriptions,
 };
+
 

@@ -13,6 +13,7 @@ const dashboardRoutes = require("./routes/dashboardRoutes");
 const aiRoutes = require("./routes/aiRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
+const subscriptionRoutes = require("./routes/subscriptionRoutes");
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/reports", reportRoutes);
+app.use("/api/subscriptions", subscriptionRoutes);
 
 // Test route
 app.get("/", (req, res) => {

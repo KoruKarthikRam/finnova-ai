@@ -575,7 +575,90 @@ def search_knowledge(payload: SearchRequest):
             "matches": []
         }
 
+# --- AUTOMATED SUBSCRIPTION DETECTION MODULE ---
+class SubscriptionAnalysisRequest(BaseModel):
+    transactions: List[TransactionItem]
+
+@app.post("/subscriptions")
+def detect_subscriptions(payload: SubscriptionAnalysisRequest):
+    transactions = payload.transactions
+    if not transactions:
+        return {
+            "success": True,
+            "subscriptions": [],
+            "total_monthly_overhead": 0.0
+        }
+
+    # Load into Pandas DataFrame
+    data = [t.model_dump() for t in transactions]
+    df = pd.DataFrame(data)
+
+    # Filter to expenses
+    df_expenses = df[df["type"] == "expense"].copy()
+    if df_expenses.empty:
+        return {
+            "success": True,
+            "subscriptions": [],
+            "total_monthly_overhead": 0.0
+        }
+
+    # Subscription & recurring merchant keywords
+    sub_keywords = [
+        "netflix", "spotify", "prime", "hotstar", "youtube", "airtel", "jio", "fiber", 
+        "broadband", "gym", "cult", "rent", "insurance", "cloud", "icloud", "apple", 
+        "google one", "chatgpt", "medium", "newspaper", "subscription", "membership",
+        "maintenance", "dth", "tata play", "electricity", "gas bill", "water tax"
+    ]
+
+    df_expenses["date_parsed"] = pd.to_datetime(df_expenses["date"], errors="coerce")
+    df_expenses["clean_desc"] = df_expenses["description"].str.strip().str.lower()
+    df_expenses["clean_category"] = df_expenses["category"].str.strip().str.lower()
+
+    # Group by description or merchant title
+    subscriptions = []
+    total_overhead = 0.0
+
+    grouped = df_expenses.groupby("clean_desc")
+    for desc_name, group in grouped:
+        if not desc_name:
+            continue
+
+        category = str(group["category"].iloc[-1])
+        avg_amount = float(group["amount"].mean())
+        count = len(group)
+        last_date = group["date_parsed"].max()
+
+        # Flag if title contains subscription keyword OR appears multiple times
+        is_sub_keyword = any(kw in desc_name for kw in sub_keywords)
+        is_recurring_category = category.lower() in ["bills", "entertainment", "rent", "healthcare"]
+
+        if is_sub_keyword or (count >= 2 and is_recurring_category):
+            # Calculate next due date (~30 days after last payment date)
+            if pd.notnull(last_date):
+                next_due = (last_date + pd.Timedelta(days=30)).strftime("%Y-%m-%d")
+            else:
+                next_due = (pd.Timestamp.now() + pd.Timedelta(days=15)).strftime("%Y-%m-%d")
+
+            subscriptions.append({
+                "title": group["description"].iloc[-1] or desc_name.title(),
+                "category": category,
+                "amount": round(avg_amount, 2),
+                "frequency": "Monthly",
+                "occurrences": int(count),
+                "last_paid": last_date.strftime("%Y-%m-%d") if pd.notnull(last_date) else "",
+                "next_due": next_due,
+                "confidence": 0.95 if is_sub_keyword else 0.80
+            })
+            total_overhead += avg_amount
+
+    return {
+        "success": True,
+        "subscriptions": subscriptions,
+        "total_monthly_overhead": round(total_overhead, 2)
+    }
+
 if __name__ == "__main__":
     # pyrefly: ignore [missing-import]
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
+
