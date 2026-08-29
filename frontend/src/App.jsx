@@ -30,7 +30,7 @@ function App() {
     <BrowserRouter>
       <Navbar />
 
-      <main className="min-h-screen bg-slate-50 p-6">
+      <main className="min-h-screen bg-[#05070c] text-slate-100 pb-16">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
