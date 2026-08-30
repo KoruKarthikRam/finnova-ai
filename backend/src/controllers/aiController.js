@@ -46,17 +46,27 @@ const getTransactionAnomalies = async (req, res) => {
   try {
     const transactions = await transactionService.getAllTransactions(req.user.id);
     
-    const formattedTransactions = transactions.map((t) => ({
-      id: t._id.toString(),
-      amount: t.amount,
-      category: t.category,
-      type: t.type,
-      date: t.date.toISOString(),
+    const formattedTransactions = (transactions || []).map((t) => ({
+      id: t._id ? t._id.toString() : "",
+      amount: t.amount || 0,
+      category: t.category || "Uncategorized",
+      type: t.type || "expense",
+      date: t.date ? new Date(t.date).toISOString() : new Date().toISOString(),
       description: t.description || "",
     }));
 
-    const result = await detectAnomalies(formattedTransactions);
-    return res.json(result);
+    try {
+      const result = await detectAnomalies(formattedTransactions);
+      return res.json(result);
+    } catch (aiErr) {
+      console.warn("AI Microservice unreachable for anomalies. Returning empty fallback:", aiErr.message);
+      return res.json({
+        success: true,
+        anomalies: [],
+        count: 0,
+        message: "AI microservice offline. No anomalies detected."
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       success: false,
@@ -70,17 +80,29 @@ const getTransactionForecast = async (req, res) => {
   try {
     const transactions = await transactionService.getAllTransactions(req.user.id);
     
-    const formattedTransactions = transactions.map((t) => ({
-      id: t._id.toString(),
-      amount: t.amount,
-      category: t.category,
-      type: t.type,
-      date: t.date.toISOString(),
+    const formattedTransactions = (transactions || []).map((t) => ({
+      id: t._id ? t._id.toString() : "",
+      amount: t.amount || 0,
+      category: t.category || "Uncategorized",
+      type: t.type || "expense",
+      date: t.date ? new Date(t.date).toISOString() : new Date().toISOString(),
       description: t.description || "",
     }));
 
-    const result = await getForecast(formattedTransactions);
-    return res.json(result);
+    try {
+      const result = await getForecast(formattedTransactions);
+      return res.json(result);
+    } catch (aiErr) {
+      console.warn("AI Microservice unreachable for forecast. Returning default fallback:", aiErr.message);
+      return res.json({
+        success: true,
+        forecast: {
+          predicted_expense: 0,
+          confidence: "low",
+          message: "AI microservice offline."
+        }
+      });
+    }
   } catch (error) {
     return res.status(500).json({
       success: false,
