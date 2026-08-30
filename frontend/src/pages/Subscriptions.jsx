@@ -249,7 +249,7 @@ function Subscriptions() {
                   placeholder="e.g. Netflix, Spotify, Gym, Rent"
                   value={customTitle}
                   onChange={(e) => setCustomTitle(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
@@ -262,7 +262,7 @@ function Subscriptions() {
                   placeholder="e.g. 499"
                   value={customAmount}
                   onChange={(e) => setCustomAmount(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
@@ -271,7 +271,7 @@ function Subscriptions() {
                 <select
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-700 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-xs font-bold text-slate-900 focus:outline-none"
                 >
                   <option value="Entertainment">Entertainment</option>
                   <option value="Bills">Bills & Utilities</option>
@@ -288,7 +288,7 @@ function Subscriptions() {
                   type="date"
                   value={customDueDate}
                   onChange={(e) => setCustomDueDate(e.target.value)}
-                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs focus:border-indigo-500 focus:outline-none"
+                  className="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-xs text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 

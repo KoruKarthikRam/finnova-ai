@@ -197,7 +197,7 @@ function Goals() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g., Emergency Fund, Car Deposit"
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -209,7 +209,7 @@ function Goals() {
                 value={targetAmount}
                 onChange={(e) => setTargetAmount(e.target.value)}
                 placeholder="Target value e.g. 50000"
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -220,7 +220,7 @@ function Goals() {
                 value={currentAmount}
                 onChange={(e) => setCurrentAmount(e.target.value)}
                 placeholder="e.g. 5000"
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -231,7 +231,7 @@ function Goals() {
                 required
                 value={deadline}
                 onChange={(e) => setDeadline(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none bg-white"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none bg-white"
               />
             </div>
 
@@ -334,7 +334,7 @@ function Goals() {
                           placeholder="Amount ₹"
                           value={contribAmounts[g._id] || ""}
                           onChange={(e) => handleContribChange(g._id, e.target.value)}
-                          className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs focus:border-indigo-500 focus:outline-none"
+                          className="flex-1 px-3 py-1.5 rounded-lg border border-slate-200 text-xs text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
                         />
                         <button
                           onClick={() => handleAddFunds(g._id, g.currentAmount, g.targetAmount)}

@@ -8,6 +8,20 @@
     letter-spacing: -0.01em;
   }
 
+  /* Ensure all inputs, selects, and textareas display dark/black text when typing */
+  input, select, textarea {
+    color: #0f172a !important;
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  option {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+  }
+
   h1, h2, h3, .font-heading {
     font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
     letter-spacing: -0.02em;

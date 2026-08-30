@@ -285,7 +285,7 @@ function Transactions() {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0.00"
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
               />
             </div>
 
@@ -295,7 +295,7 @@ function Transactions() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none bg-white cursor-pointer"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none bg-white cursor-pointer"
               >
                 {type === "expense"
                   ? expenseCategories.map((cat) => (
@@ -319,7 +319,7 @@ function Transactions() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="e.g., Dinner at cafe, Monthly salary"
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none"
               />
               {suggestedCategory && (
                 <div className="mt-1.5 flex items-center justify-between">
@@ -343,7 +343,7 @@ function Transactions() {
                 required
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 px-4 py-2 focus:border-indigo-500 focus:outline-none bg-white"
+                className="w-full rounded-lg border border-slate-200 px-4 py-2 text-slate-900 font-medium focus:border-indigo-500 focus:outline-none bg-white"
               />
             </div>
 
@@ -384,7 +384,7 @@ function Transactions() {
               placeholder="Search description/category..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="px-4 py-1.5 rounded-lg border border-slate-200 text-sm focus:border-indigo-500 focus:outline-none w-full sm:w-64"
+              className="px-4 py-1.5 rounded-lg border border-slate-200 text-sm text-slate-900 font-medium focus:border-indigo-500 focus:outline-none w-full sm:w-64"
             />
           </div>
 
@@ -395,7 +395,7 @@ function Transactions() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 outline-none cursor-pointer"
+                className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 text-slate-900 font-medium outline-none cursor-pointer"
               >
                 <option value="all">All</option>
                 <option value="income">Income</option>
@@ -408,7 +408,7 @@ function Transactions() {
               <select
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 outline-none cursor-pointer"
+                className="bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 text-slate-900 font-medium outline-none cursor-pointer"
               >
                 <option value="all">All Categories</option>
                 {allCategories.map((cat) => (

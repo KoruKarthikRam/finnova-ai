@@ -646,7 +646,7 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search lessons (e.g., 80C, SIP, CIBIL)..."
-            className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-xs focus:border-indigo-500 focus:outline-none shadow-xxs"
+            className="w-full rounded-2xl border border-slate-200 bg-white pl-10 pr-4 py-2.5 text-xs text-slate-900 font-medium focus:border-indigo-500 focus:outline-none shadow-xxs"
           />
           <span className="absolute left-3.5 top-3 text-slate-400 text-xs">🔍</span>
         </div>

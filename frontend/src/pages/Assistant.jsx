@@ -388,7 +388,7 @@ function Assistant() {
                 placeholder="Ask about SIPs, Section 80C deductions, or budgeting..."
                 disabled={isLoading}
                 rows={1}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm focus:border-indigo-500 focus:outline-none resize-none disabled:bg-slate-50 disabled:cursor-not-allowed max-h-24 scrollbar-thin"
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 font-medium focus:border-indigo-500 focus:outline-none resize-none disabled:bg-slate-50 disabled:cursor-not-allowed max-h-24 scrollbar-thin"
               />
               <button
                 onClick={() => handleSendMessage()}
