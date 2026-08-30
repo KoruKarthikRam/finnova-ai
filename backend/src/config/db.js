@@ -2,14 +2,20 @@ const mongoose = require("mongoose");
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    if (!process.env.MONGODB_URI) {
+      throw new Error("MONGODB_URI is not defined in environment variables (.env file).");
+    }
 
-    console.log("MongoDB connected successfully");
+    const conn = await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of default 30s
+    });
+
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error("MongoDB connection failed:");
-    console.error(error);
-    // process.exit(1);
+    console.error("❌ MongoDB connection failed:", error.message);
+    console.error("👉 Please ensure MongoDB is running locally or check your MONGODB_URI in backend/.env.");
   }
 };
 
 module.exports = connectDB;
+
