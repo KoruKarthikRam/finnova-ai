@@ -44,12 +44,19 @@ const getModel = () => {
 
   try {
     return genAI.getGenerativeModel({
-      model: "gemini-3.6-flash",
+      model: "gemini-1.5-flash",
       systemInstruction: systemInstruction,
     });
   } catch (error) {
     console.error("Error fetching generative model:", error.message);
-    return null;
+    try {
+      return genAI.getGenerativeModel({
+        model: "gemini-pro",
+        systemInstruction: systemInstruction,
+      });
+    } catch (fallbackErr) {
+      return null;
+    }
   }
 };
 
@@ -145,7 +152,11 @@ const generateChatResponse = async (message, history = [], userContext = null, r
     };
   } catch (error) {
     console.error("Error generating response from Gemini:", error.message);
-    throw error;
+    return {
+      text: "I experienced a connection issue while reaching the AI model. Please verify your `GEMINI_API_KEY` in `backend/.env` or try again.",
+      isMock: true,
+      error: error.message
+    };
   }
 };
 

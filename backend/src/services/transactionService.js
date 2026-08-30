@@ -9,8 +9,15 @@ const getTransactionById = async (id, userId) => {
 };
 
 const createTransaction = async (userId, transactionData) => {
+  const data = { ...transactionData };
+
+  // Remove empty or invalid date strings so schema default (Date.now) can take effect
+  if (!data.date || isNaN(new Date(data.date).getTime())) {
+    delete data.date;
+  }
+
   const transaction = new Transaction({
-    ...transactionData,
+    ...data,
     userId,
   });
 

@@ -30,7 +30,7 @@ const analyzeTransactions = async (transactions) => {
 
 const classifyDescription = async (description) => {
   try {
-    const response = await aiServiceClient.post("/classify", { description });
+    const response = await aiServiceClient.post("/classify", { description }, { timeout: 2000 });
     return response.data;
   } catch (error) {
     console.error("AI Service classify description failed:", error.message);
@@ -40,7 +40,7 @@ const classifyDescription = async (description) => {
 
 const detectAnomalies = async (transactions) => {
   try {
-    const response = await aiServiceClient.post("/anomalies", { transactions });
+    const response = await aiServiceClient.post("/anomalies", { transactions }, { timeout: 2500 });
     return response.data;
   } catch (error) {
     console.error("AI Service anomaly detection failed:", error.message);
@@ -50,7 +50,7 @@ const detectAnomalies = async (transactions) => {
 
 const getForecast = async (transactions) => {
   try {
-    const response = await aiServiceClient.post("/forecast", { transactions });
+    const response = await aiServiceClient.post("/forecast", { transactions }, { timeout: 2500 });
     return response.data;
   } catch (error) {
     console.error("AI Service forecasting failed:", error.message);
@@ -60,7 +60,7 @@ const getForecast = async (transactions) => {
 
 const searchKnowledge = async (query, limit = 3) => {
   try {
-    const response = await aiServiceClient.post("/search-knowledge", { query, limit });
+    const response = await aiServiceClient.post("/search-knowledge", { query, limit }, { timeout: 2500 });
     return response.data;
   } catch (error) {
     console.error("AI Service search knowledge failed:", error.message);
@@ -70,7 +70,7 @@ const searchKnowledge = async (query, limit = 3) => {
 
 const detectSubscriptions = async (transactions) => {
   try {
-    const response = await aiServiceClient.post("/subscriptions", { transactions });
+    const response = await aiServiceClient.post("/subscriptions", { transactions }, { timeout: 2500 });
     return response.data;
   } catch (error) {
     console.error("AI Service subscription detection failed:", error.message);

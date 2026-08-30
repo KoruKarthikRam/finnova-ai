@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const dns = require("dns");
 
 const connectDB = async () => {
   try {
@@ -6,8 +7,15 @@ const connectDB = async () => {
       throw new Error("MONGODB_URI is not defined in environment variables (.env file).");
     }
 
+    // Set Google and Cloudflare DNS fallback servers to resolve SRV record lookup issues (ESERVFAIL) on Node/Windows
+    try {
+      dns.setServers(["8.8.8.8", "1.1.1.1", "8.8.4.4"]);
+    } catch (e) {
+      // Fallback silently if environment prevents custom DNS settings
+    }
+
     const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of default 30s
+      serverSelectionTimeoutMS: 10000,
     });
 
     console.log(`MongoDB Connected: ${conn.connection.host}`);

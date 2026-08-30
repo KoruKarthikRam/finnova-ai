@@ -70,12 +70,12 @@ const generateMonthlyReport = async (userId, month, year) => {
     let forecast = null;
     let insights = [];
 
-    const formattedTransactions = transactions.map((t) => ({
-      id: t._id.toString(),
-      amount: t.amount,
-      category: t.category,
-      type: t.type,
-      date: t.date.toISOString(),
+    const formattedTransactions = (transactions || []).map((t) => ({
+      id: t._id ? t._id.toString() : "",
+      amount: t.amount || 0,
+      category: t.category || "Others",
+      type: t.type || "expense",
+      date: t.date ? new Date(t.date).toISOString() : new Date().toISOString(),
       description: t.description || "",
     }));
 

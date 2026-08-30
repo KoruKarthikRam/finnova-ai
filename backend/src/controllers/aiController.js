@@ -21,6 +21,33 @@ const testAiServiceConnection = async (req, res) => {
   }
 };
 
+const fallbackClassify = (description) => {
+  const text = (description || "").toLowerCase();
+
+  const rules = [
+    { category: "Food", words: ["food", "lunch", "dinner", "breakfast", "burger", "pizza", "restaurant", "cafe", "chai", "tea", "coffee", "swiggy", "zomato", "dominos", "mcdonalds", "kfc", "starbucks", "subway", "grocery", "groceries", "blinkit", "zepto", "instamart", "dhaba", "snack", "snacks", "eating", "biryani", "cake", "bakery", "meal"] },
+    { category: "Transport", words: ["uber", "ola", "cab", "petrol", "fuel", "diesel", "metro", "bus", "train", "flight", "taxi", "rapido", "toll", "parking", "auto", "rickshaw", "irctc"] },
+    { category: "Rent", words: ["rent", "landlord", "flat", "pg", "apartment", "brokerage", "maintenance"] },
+    { category: "Shopping", words: ["amazon", "flipkart", "myntra", "ajio", "zara", "h&m", "decathlon", "clothes", "clothing", "shoes", "sneakers", "shopping", "dress", "jacket", "nykaa"] },
+    { category: "Bills", words: ["electricity", "bill", "bills", "water", "gas", "recharge", "wifi", "broadband", "jio", "airtel", "dth", "tata play", "utility", "postpaid", "prepaid"] },
+    { category: "Entertainment", words: ["netflix", "spotify", "movie", "cinema", "pvr", "bookmyshow", "hotstar", "steam", "gaming", "youtube", "playstation", "concert"] },
+    { category: "Healthcare", words: ["doctor", "medicine", "medicines", "pharmacy", "hospital", "clinic", "health", "apollo", "medplus", "dentist", "prescription", "lab"] },
+    { category: "Education", words: ["course", "udemy", "coursera", "school", "college", "tuition", "book", "books", "stationery", "exam", "fee", "fees"] },
+    { category: "Salary", words: ["salary", "paycheck", "stipend", "wage", "wages", "payroll", "income"] },
+    { category: "Investment", words: ["investment", "stock", "stocks", "crypto", "dividend", "interest", "returns", "mutual fund"] },
+    { category: "Gift", words: ["gift", "present", "reward"] },
+    { category: "Refund", words: ["refund", "reimbursement", "return"] }
+  ];
+
+  for (const item of rules) {
+    if (item.words.some((w) => text.includes(w))) {
+      return item.category;
+    }
+  }
+
+  return "Others";
+};
+
 const classifyTransaction = async (req, res) => {
   const { description } = req.body;
   if (!description) {
@@ -34,10 +61,13 @@ const classifyTransaction = async (req, res) => {
     const result = await classifyDescription(description);
     return res.json(result);
   } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: "Failed to classify transaction description",
-      error: error.message,
+    console.warn("AI Microservice unreachable for classify. Using fallback classifier:", error.message);
+    const category = fallbackClassify(description);
+    return res.json({
+      success: true,
+      category,
+      confidence: 0.85,
+      fallback: true
     });
   }
 };
@@ -219,12 +249,12 @@ const getAiInsights = async (req, res) => {
     let anomalies = [];
     let forecast = null;
     
-    const formattedTransactions = transactions.map((t) => ({
-      id: t._id.toString(),
-      amount: t.amount,
-      category: t.category,
-      type: t.type,
-      date: t.date.toISOString(),
+    const formattedTransactions = (transactions || []).map((t) => ({
+      id: t._id ? t._id.toString() : "",
+      amount: t.amount || 0,
+      category: t.category || "Others",
+      type: t.type || "expense",
+      date: t.date ? new Date(t.date).toISOString() : new Date().toISOString(),
       description: t.description || "",
     }));
 

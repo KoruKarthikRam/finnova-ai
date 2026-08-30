@@ -32,7 +32,7 @@ const calculateHealthScore = async (userId) => {
   // Standard non-essential categories (Wants)
   const nonEssentialCats = ["shopping", "entertainment", "others", "gift"];
   const nonEssentialExpenses = transactions
-    .filter((t) => t.type === "expense" && nonEssentialCats.includes(t.category.toLowerCase()))
+    .filter((t) => t.type === "expense" && nonEssentialCats.includes((t.category || "").toLowerCase().trim()))
     .reduce((sum, item) => sum + item.amount, 0);
 
   const nonEssentialRatio = totalExpense > 0 ? (nonEssentialExpenses / totalExpense) * 100 : 0;
@@ -46,7 +46,7 @@ const calculateHealthScore = async (userId) => {
     for (const b of budgets) {
       // Calculate category spent amount in this month
       const spent = transactions
-        .filter((t) => t.type === "expense" && t.category.toLowerCase() === b.category.toLowerCase())
+        .filter((t) => t.type === "expense" && (t.category || "").toLowerCase().trim() === (b.category || "").toLowerCase().trim())
         .reduce((sum, item) => sum + item.amount, 0);
       if (spent > b.limit) {
         exceededBudgetsCount++;
