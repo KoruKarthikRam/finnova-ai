@@ -5,6 +5,7 @@
   ### Next-Generation AI-Powered Personal Finance & Wealth Intelligence Platform
 
   [![Developed By](https://img.shields.io/badge/Developer-Koru_Karthik_Ram-blueviolet?style=for-the-badge&logo=github)](https://github.com/KoruKarthikRam)
+  [![Live Website](https://img.shields.io/badge/Live_Website-finnova--ai.vercel.app-0070F3?style=for-the-badge&logo=vercel&logoColor=white)](https://finnova-ai.vercel.app)
 
   [![React](https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
   [![Vite](https://img.shields.io/badge/Vite-6.0-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
@@ -16,7 +17,10 @@
   [![FastAPI](https://img.shields.io/badge/FastAPI-0.110-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
   [![Scikit-Learn](https://img.shields.io/badge/scikit--learn-ML-F7931E?style=for-the-badge&logo=scikit-learn&logoColor=white)](https://scikit-learn.org/)
   [![Google Gemini](https://img.shields.io/badge/Google_Gemini-AI_Copilot-8E44AD?style=for-the-badge&logo=googlegemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
-  [![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://vercel.com/)
+
+  <p align="center">
+    🌐 <b>Live Web Application</b>: <a href="https://finnova-ai.vercel.app"><b>https://finnova-ai.vercel.app</b></a>
+  </p>
 
   <p align="center">
     <b>FinNova AI</b> is an end-to-end, intelligent financial management application that empowers users with automated transaction categorization, anomaly detection, predictive forecasting, recurring subscription tracking, RAG financial knowledge search, and an interactive AI Copilot powered by Google Gemini.
@@ -321,8 +325,9 @@ Feel free to check out the [Issues Page](https://github.com/KoruKarthikRam/finno
 ## 👤 Author
 
 **Koru Karthik Ram**
-* GitHub: [@KoruKarthikRam](https://github.com/KoruKarthikRam)
-* Repository: [finnova-ai](https://github.com/KoruKarthikRam/finnova-ai)
+* 🌐 Website: [https://finnova-ai.vercel.app](https://finnova-ai.vercel.app)
+* 🐙 GitHub: [@KoruKarthikRam](https://github.com/KoruKarthikRam)
+* 📦 Repository: [finnova-ai](https://github.com/KoruKarthikRam/finnova-ai)
 
 ---
 
