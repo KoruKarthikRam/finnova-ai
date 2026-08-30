@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Reports() {
   const current = new Date();
@@ -41,7 +42,7 @@ function Reports() {
       setIsLoading(true);
       setError("");
       const response = await axios.get(
-        `http://localhost:5000/api/reports/monthly?month=${month}&year=${year}`,
+        `${API_BASE_URL}/api/reports/monthly?month=${month}&year=${year}`,
         getAuthConfig()
       );
 

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Subscriptions() {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -27,7 +28,7 @@ function Subscriptions() {
     try {
       setIsLoading(true);
       setError("");
-      const response = await axios.get("http://localhost:5000/api/subscriptions", getAuthConfig());
+      const response = await axios.get(`${API_BASE_URL}/api/subscriptions`, getAuthConfig());
       if (response.data.success) {
         setSubscriptions(response.data.subscriptions || []);
         setTotalOverhead(response.data.totalMonthlyOverhead || 0);

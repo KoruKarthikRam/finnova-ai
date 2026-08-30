@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Quiz() {
   const [searchParams] = useSearchParams();
@@ -49,7 +50,7 @@ function Quiz() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/ai/quiz",
+        `${API_BASE_URL}/api/ai/quiz`,
         { topic, difficulty },
         getAuthConfig()
       );

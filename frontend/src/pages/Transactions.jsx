@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Transactions() {
   const [transactions, setTransactions] = useState([]);
@@ -50,7 +51,7 @@ function Transactions() {
     try {
       setLoading(true);
       const response = await axios.get(
-        "http://localhost:5000/api/transactions",
+        `${API_BASE_URL}/api/transactions`,
         getAuthConfig()
       );
       if (response.data.success) {
@@ -87,7 +88,7 @@ function Transactions() {
     const timer = setTimeout(async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/ai/classify",
+          `${API_BASE_URL}/api/ai/classify`,
           { description },
           getAuthConfig()
         );
@@ -139,7 +140,7 @@ function Transactions() {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/transactions",
+        `${API_BASE_URL}/api/transactions`,
         payload,
         getAuthConfig()
       );
@@ -167,7 +168,7 @@ function Transactions() {
 
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/transactions/${id}`,
+        `${API_BASE_URL}/api/transactions/${id}`,
         getAuthConfig()
       );
 

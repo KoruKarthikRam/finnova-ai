@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Goals() {
   const [goals, setGoals] = useState([]);
@@ -25,7 +26,7 @@ function Goals() {
   const fetchGoals = async () => {
     try {
       setLoading(true);
-      const response = await axios.get("http://localhost:5000/api/goals", getAuthConfig());
+      const response = await axios.get(`${API_BASE_URL}/api/goals`, getAuthConfig());
       if (response.data.success) {
         setGoals(response.data.data);
       }
@@ -59,7 +60,7 @@ function Goals() {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/goals",
+        `${API_BASE_URL}/api/goals`,
         payload,
         getAuthConfig()
       );
@@ -90,7 +91,7 @@ function Goals() {
     try {
       const newAmount = currentVal + parseFloat(addVal);
       const response = await axios.put(
-        `http://localhost:5000/api/goals/${id}`,
+        `${API_BASE_URL}/api/goals/${id}`,
         { currentAmount: newAmount },
         getAuthConfig()
       );
@@ -115,7 +116,7 @@ function Goals() {
 
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/goals/${id}`,
+        `${API_BASE_URL}/api/goals/${id}`,
         getAuthConfig()
       );
 

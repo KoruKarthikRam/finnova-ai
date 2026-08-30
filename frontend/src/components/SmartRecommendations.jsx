@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function SmartRecommendations() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ function SmartRecommendations() {
   const fetchRecommendations = async () => {
     try {
       setIsLoading(true);
-      const res = await axios.get("http://localhost:5000/api/recommendations", getAuthConfig());
+      const res = await axios.get(`${API_BASE_URL}/api/recommendations`, getAuthConfig());
       if (res.data.success) {
         setRecommendations(res.data.recommendations || []);
         setMetrics(res.data.metricsSummary || null);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Budget() {
   const [budgets, setBudgets] = useState([]);
@@ -60,13 +61,13 @@ function Budget() {
 
       // Fetch budgets for selected month/year
       const budgetRes = await axios.get(
-        `http://localhost:5000/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
+        `${API_BASE_URL}/api/budgets?month=${selectedMonth}&year=${selectedYear}`,
         getAuthConfig()
       );
 
       // Fetch all transactions to calculate matching category spends
       const transactionRes = await axios.get(
-        "http://localhost:5000/api/transactions",
+        `${API_BASE_URL}/api/transactions`,
         getAuthConfig()
       );
 
@@ -116,7 +117,7 @@ function Budget() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/budgets",
+        `${API_BASE_URL}/api/budgets`,
         {
           category,
           limit: parseFloat(limit),
@@ -145,7 +146,7 @@ function Budget() {
 
     try {
       const response = await axios.delete(
-        `http://localhost:5000/api/budgets/${id}`,
+        `${API_BASE_URL}/api/budgets/${id}`,
         getAuthConfig()
       );
 

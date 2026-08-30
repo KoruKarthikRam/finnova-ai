@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 import SmartRecommendations from "../components/SmartRecommendations";
 import {
   ResponsiveContainer,
@@ -58,10 +59,10 @@ function Dashboard() {
         const year = current.getFullYear();
 
         const [txRes, budgetRes, goalRes, healthRes] = await Promise.all([
-          axios.get("http://localhost:5000/api/transactions", config),
-          axios.get(`http://localhost:5000/api/budgets?month=${month}&year=${year}`, config),
-          axios.get("http://localhost:5000/api/goals", config),
-          axios.get("http://localhost:5000/api/dashboard/health-score", config),
+          axios.get(`${API_BASE_URL}/api/transactions`, config),
+          axios.get(`${API_BASE_URL}/api/budgets?month=${month}&year=${year}`, config),
+          axios.get(`${API_BASE_URL}/api/goals`, config),
+          axios.get(`${API_BASE_URL}/api/dashboard/health-score`, config),
         ]);
 
         if (txRes.data.success) setTransactions(txRes.data.data);
@@ -70,14 +71,14 @@ function Dashboard() {
         if (healthRes.data.success) setHealthData(healthRes.data.data);
 
         try {
-          const anomalyRes = await axios.get("http://localhost:5000/api/ai/anomalies", config);
+          const anomalyRes = await axios.get(`${API_BASE_URL}/api/ai/anomalies`, config);
           if (anomalyRes.data.success) setAnomalies(anomalyRes.data.anomalies || []);
         } catch (err) {
           setAnomalies([]);
         }
 
         try {
-          const forecastRes = await axios.get("http://localhost:5000/api/ai/forecast", config);
+          const forecastRes = await axios.get(`${API_BASE_URL}/api/ai/forecast`, config);
           if (forecastRes.data.success) setForecastData(forecastRes.data);
         } catch (err) {
           setForecastData(null);
@@ -85,7 +86,7 @@ function Dashboard() {
 
         try {
           setInsightsLoading(true);
-          const insightsRes = await axios.get("http://localhost:5000/api/ai/insights", config);
+          const insightsRes = await axios.get(`${API_BASE_URL}/api/ai/insights`, config);
           if (insightsRes.data.success) setInsights(insightsRes.data.insights || []);
         } catch (err) {
           setInsights([]);

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import { API_BASE_URL } from "../api/config";
 
 function Assistant() {
   const [messages, setMessages] = useState([
@@ -50,9 +51,9 @@ function Assistant() {
       const year = current.getFullYear();
 
       const [txRes, budgetRes, healthRes] = await Promise.allSettled([
-        axios.get("http://localhost:5000/api/transactions", config),
-        axios.get(`http://localhost:5000/api/budgets?month=${month}&year=${year}`, config),
-        axios.get("http://localhost:5000/api/dashboard/health-score", config),
+        axios.get(`${API_BASE_URL}/api/transactions`, config),
+        axios.get(`${API_BASE_URL}/api/budgets?month=${month}&year=${year}`, config),
+        axios.get(`${API_BASE_URL}/api/dashboard/health-score`, config),
       ]);
 
       let transactions = [];
@@ -133,7 +134,7 @@ function Assistant() {
       }));
 
       const response = await axios.post(
-        "http://localhost:5000/api/ai/chat",
+        `${API_BASE_URL}/api/ai/chat`,
         {
           message: text,
           history: historyPayload,
