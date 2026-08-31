@@ -3,11 +3,11 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
 
-function SmartRecommendations() {
+function SmartRecommendations({ initialRecommendations = null }) {
   const navigate = useNavigate();
-  const [recommendations, setRecommendations] = useState([]);
+  const [recommendations, setRecommendations] = useState(initialRecommendations || []);
   const [metrics, setMetrics] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!initialRecommendations);
   const [error, setError] = useState("");
 
   const getAuthConfig = () => {
@@ -36,8 +36,13 @@ function SmartRecommendations() {
   };
 
   useEffect(() => {
-    fetchRecommendations();
-  }, []);
+    if (initialRecommendations && Array.isArray(initialRecommendations)) {
+      setRecommendations(initialRecommendations);
+      setIsLoading(false);
+    } else {
+      fetchRecommendations();
+    }
+  }, [initialRecommendations]);
 
   const getBadgeStyle = (priority) => {
     switch (priority) {

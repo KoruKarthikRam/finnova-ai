@@ -33,6 +33,7 @@ function Dashboard() {
   const [budgets, setBudgets] = useState([]);
   const [goals, setGoals] = useState([]);
   const [healthData, setHealthData] = useState(null);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [anomalies, setAnomalies] = useState([]);
@@ -51,56 +52,57 @@ function Dashboard() {
 
   useEffect(() => {
     const fetchDashboardData = async () => {
+      const config = getAuthConfig();
+      const current = new Date();
+      const month = current.getMonth() + 1;
+      const year = current.getFullYear();
+
+      // 1. Fetch unified aggregated summary in 1 single HTTP request
       try {
         setLoading(true);
-        const config = getAuthConfig();
-        const current = new Date();
-        const month = current.getMonth() + 1;
-        const year = current.getFullYear();
+        const summaryRes = await axios.get(
+          `${API_BASE_URL}/api/dashboard/summary?month=${month}&year=${year}`,
+          config
+        );
 
-        const [txRes, budgetRes, goalRes, healthRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/transactions`, config),
-          axios.get(`${API_BASE_URL}/api/budgets?month=${month}&year=${year}`, config),
-          axios.get(`${API_BASE_URL}/api/goals`, config),
-          axios.get(`${API_BASE_URL}/api/dashboard/health-score`, config),
-        ]);
-
-        if (txRes.data.success) setTransactions(txRes.data.data);
-        if (budgetRes.data.success) setBudgets(budgetRes.data.data);
-        if (goalRes.data.success) setGoals(goalRes.data.data);
-        if (healthRes.data.success) setHealthData(healthRes.data.data);
-
-        try {
-          const anomalyRes = await axios.get(`${API_BASE_URL}/api/ai/anomalies`, config);
-          if (anomalyRes.data.success) setAnomalies(anomalyRes.data.anomalies || []);
-        } catch (err) {
-          setAnomalies([]);
+        if (summaryRes.data.success) {
+          const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data;
+          setTransactions(transactions || []);
+          setBudgets(budgets || []);
+          setGoals(goals || []);
+          setHealthData(healthData || null);
+          setRecommendations(recommendations || []);
         }
-
-        try {
-          const forecastRes = await axios.get(`${API_BASE_URL}/api/ai/forecast`, config);
-          if (forecastRes.data.success) setForecastData(forecastRes.data);
-        } catch (err) {
-          setForecastData(null);
-        }
-
-        try {
-          setInsightsLoading(true);
-          const insightsRes = await axios.get(`${API_BASE_URL}/api/ai/insights`, config);
-          if (insightsRes.data.success) setInsights(insightsRes.data.insights || []);
-        } catch (err) {
-          setInsights([]);
-        } finally {
-          setInsightsLoading(false);
-        }
-
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard summary fetch error:", err);
         setError("Failed to fetch dashboard metrics");
       } finally {
         setLoading(false);
       }
+
+      // 2. Fetch heavy AI telemetry & Gemini insights asynchronously in background
+      setInsightsLoading(true);
+      Promise.allSettled([
+        axios.get(`${API_BASE_URL}/api/ai/anomalies`, config),
+        axios.get(`${API_BASE_URL}/api/ai/forecast`, config),
+        axios.get(`${API_BASE_URL}/api/ai/insights`, config),
+      ]).then(([anomalyRes, forecastRes, insightsRes]) => {
+        if (anomalyRes.status === "fulfilled" && anomalyRes.value?.data?.success) {
+          setAnomalies(anomalyRes.value.data.anomalies || []);
+        }
+        if (forecastRes.status === "fulfilled" && forecastRes.value?.data?.success) {
+          setForecastData(forecastRes.value.data);
+        }
+        if (insightsRes.status === "fulfilled" && insightsRes.value?.data?.success) {
+          setInsights(insightsRes.value.data.insights || []);
+        }
+      }).catch((aiErr) => {
+        console.warn("Background AI fetching partial error:", aiErr);
+      }).finally(() => {
+        setInsightsLoading(false);
+      });
     };
+
     fetchDashboardData();
   }, []);
 
@@ -219,7 +221,7 @@ function Dashboard() {
       ) : (
         <>
           {/* Smart Recommendations Widget */}
-          <SmartRecommendations />
+          <SmartRecommendations initialRecommendations={recommendations} />
 
           {/* Metrics Summary Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -294,7 +296,20 @@ function Dashboard() {
             </div>
 
             {insightsLoading ? (
-              <p className="text-xs text-slate-400">Querying Gemini LLM...</p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                  <div className="h-3 bg-slate-800 rounded w-3/4"></div>
+                  <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                  <div className="h-3 bg-slate-800 rounded w-5/6"></div>
+                  <div className="h-3 bg-slate-800/60 rounded w-2/3"></div>
+                </div>
+                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                  <div className="h-3 bg-slate-800 rounded w-4/5"></div>
+                  <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                </div>
+              </div>
             ) : insights.length === 0 ? (
               <p className="text-xs text-slate-400">No insights available.</p>
             ) : (

@@ -37,4 +37,7 @@ const goalSchema = new mongoose.Schema(
   }
 );
 
+// Add compound index for active goal queries
+goalSchema.index({ userId: 1, status: 1 });
+
 module.exports = mongoose.model("Goal", goalSchema);

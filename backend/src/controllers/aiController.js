@@ -215,16 +215,35 @@ const chatWithAssistant = async (req, res) => {
   }
 };
 
+// Simple in-memory cache for AI insights (5-minute TTL per user)
+const insightsCache = new Map();
+const INSIGHTS_TTL_MS = 5 * 60 * 1000;
+
 const getAiInsights = async (req, res) => {
   try {
-    const transactions = await transactionService.getAllTransactions(req.user.id);
-    
-    // Calculate current month's income, expenses, balance
+    const userId = req.user.id;
+    const cached = insightsCache.get(userId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return res.json({
+        success: true,
+        cached: true,
+        ...cached.data
+      });
+    }
+
     const current = new Date();
     const currentMonth = current.getMonth() + 1;
     const currentYear = current.getFullYear();
+
+    // 1. Fetch transactions, budgets, and health score in PARALLEL
+    const [transactions, budgets, healthResult] = await Promise.all([
+      transactionService.getAllTransactions(userId),
+      budgetService.getBudgets(userId, currentMonth, currentYear),
+      healthService.calculateHealthScore(userId)
+    ]);
     
-    const currentMonthTransactions = transactions.filter(t => {
+    // Calculate current month's income, expenses, balance
+    const currentMonthTransactions = (transactions || []).filter(t => {
       const d = new Date(t.date);
       return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
     });
@@ -239,16 +258,6 @@ const getAiInsights = async (req, res) => {
 
     const balance = totalIncome - totalExpenses;
 
-    // Fetch active budgets
-    const budgets = await budgetService.getBudgets(req.user.id, currentMonth, currentYear);
-    
-    // Fetch health score
-    const healthResult = await healthService.calculateHealthScore(req.user.id);
-
-    // Fetch anomalies & forecast (gracefully fallback if microservice is offline)
-    let anomalies = [];
-    let forecast = null;
-    
     const formattedTransactions = (transactions || []).map((t) => ({
       id: t._id ? t._id.toString() : "",
       amount: t.amount || 0,
@@ -258,22 +267,20 @@ const getAiInsights = async (req, res) => {
       description: t.description || "",
     }));
 
-    try {
-      const anomalyRes = await detectAnomalies(formattedTransactions);
-      if (anomalyRes.success) {
-        anomalies = anomalyRes.anomalies || [];
-      }
-    } catch (err) {
-      console.warn("FastAPI anomalies service unreachable for insights. Skipping anomalies context.");
-    }
+    // 2. Fetch anomalies & forecast in PARALLEL using Promise.allSettled
+    let anomalies = [];
+    let forecast = null;
 
-    try {
-      const forecastRes = await getForecast(formattedTransactions);
-      if (forecastRes.success) {
-        forecast = forecastRes.forecast || null;
-      }
-    } catch (err) {
-      console.warn("FastAPI forecast service unreachable for insights. Skipping forecast context.");
+    const [anomalyResult, forecastResult] = await Promise.allSettled([
+      detectAnomalies(formattedTransactions),
+      getForecast(formattedTransactions)
+    ]);
+
+    if (anomalyResult.status === "fulfilled" && anomalyResult.value?.success) {
+      anomalies = anomalyResult.value.anomalies || [];
+    }
+    if (forecastResult.status === "fulfilled" && forecastResult.value?.success) {
+      forecast = forecastResult.value.forecast || null;
     }
 
     const userContext = {
@@ -282,12 +289,19 @@ const getAiInsights = async (req, res) => {
       totalExpenses,
       healthScore: healthResult ? healthResult.score : null,
       healthGrade: healthResult ? healthResult.grade : null,
-      budgets: budgets.map(b => ({ category: b.category, limit: b.limit })),
+      budgets: (budgets || []).map(b => ({ category: b.category, limit: b.limit })),
       anomalies: anomalies.slice(0, 3).map(a => ({ amount: a.amount, category: a.category, reason: a.reason })),
       forecast
     };
 
     const response = await generateInsights(userContext);
+    
+    // Cache the response
+    insightsCache.set(userId, {
+      data: response,
+      expiresAt: Date.now() + INSIGHTS_TTL_MS
+    });
+
     return res.json({
       success: true,
       ...response

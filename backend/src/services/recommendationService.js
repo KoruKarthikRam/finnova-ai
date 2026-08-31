@@ -2,19 +2,29 @@ const transactionService = require("./transactionService");
 const healthService = require("./healthService");
 const budgetService = require("./budgetService");
 
+const recCache = new Map();
+const REC_TTL_MS = 5 * 60 * 1000;
+
 /**
  * Generates personalized financial masterclass & action recommendations based on user financial state.
  */
 const generateUserRecommendations = async (userId) => {
   try {
-    const transactions = await transactionService.getAllTransactions(userId);
-    const healthResult = await healthService.calculateHealthScore(userId);
+    const cached = recCache.get(userId);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.data;
+    }
+
+    const [transactions, healthResult] = await Promise.all([
+      transactionService.getAllTransactions(userId),
+      healthService.calculateHealthScore(userId)
+    ]);
 
     const current = new Date();
     const currentMonth = current.getMonth() + 1;
     const currentYear = current.getFullYear();
 
-    const currentMonthTransactions = transactions.filter((t) => {
+    const currentMonthTransactions = (transactions || []).filter((t) => {
       const d = new Date(t.date);
       return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
     });
@@ -125,7 +135,7 @@ const generateUserRecommendations = async (userId) => {
       });
     }
 
-    return {
+    const result = {
       success: true,
       metricsSummary: {
         totalIncome,
@@ -136,6 +146,13 @@ const generateUserRecommendations = async (userId) => {
       },
       recommendations: recommendations.slice(0, 3) // Return top 3 tailored recommendations
     };
+
+    recCache.set(userId, {
+      data: result,
+      expiresAt: Date.now() + REC_TTL_MS
+    });
+
+    return result;
   } catch (error) {
     console.error("Error generating smart recommendations:", error.message);
     throw error;

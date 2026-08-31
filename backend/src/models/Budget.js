@@ -39,4 +39,6 @@ budgetSchema.index(
   { unique: true }
 );
 
+budgetSchema.index({ userId: 1, month: 1, year: 1 });
+
 module.exports = mongoose.model("Budget", budgetSchema);
