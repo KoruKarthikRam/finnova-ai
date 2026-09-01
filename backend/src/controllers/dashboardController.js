@@ -27,10 +27,22 @@ const getDashboardSummary = async (req, res) => {
     const year = parseInt(req.query.year) || current.getFullYear();
 
     const [transactions, budgets, goals, healthData, recommendationsRes] = await Promise.all([
-      transactionService.getAllTransactions(userId),
-      budgetService.getBudgets(userId, month, year),
-      goalService.getGoals(userId),
-      healthService.calculateHealthScore(userId),
+      transactionService.getAllTransactions(userId).catch((err) => {
+        console.error("Dashboard transactionService error:", err);
+        return [];
+      }),
+      budgetService.getBudgets(userId, month, year).catch((err) => {
+        console.error("Dashboard budgetService error:", err);
+        return [];
+      }),
+      goalService.getAllGoals(userId).catch((err) => {
+        console.error("Dashboard goalService error:", err);
+        return [];
+      }),
+      healthService.calculateHealthScore(userId).catch((err) => {
+        console.error("Dashboard healthService error:", err);
+        return null;
+      }),
       generateUserRecommendations(userId).catch(() => ({ recommendations: [] }))
     ]);
 
@@ -41,7 +53,7 @@ const getDashboardSummary = async (req, res) => {
         budgets: budgets || [],
         goals: goals || [],
         healthData: healthData || null,
-        recommendations: recommendationsRes.recommendations || []
+        recommendations: (recommendationsRes && recommendationsRes.recommendations) || []
       }
     });
   } catch (error) {

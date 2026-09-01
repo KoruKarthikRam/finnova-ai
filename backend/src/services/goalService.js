@@ -44,7 +44,9 @@ const deleteGoal = async (id, userId) => {
 
 module.exports = {
   getAllGoals,
+  getGoals: getAllGoals,
   createGoal,
   updateGoal,
   deleteGoal,
 };
+

@@ -65,8 +65,8 @@ function Dashboard() {
           config
         );
 
-        if (summaryRes.data.success) {
-          const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data;
+        if (summaryRes.data && summaryRes.data.success) {
+          const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data || {};
           setTransactions(transactions || []);
           setBudgets(budgets || []);
           setGoals(goals || []);
