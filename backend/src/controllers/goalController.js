@@ -1,4 +1,5 @@
 const goalService = require("../services/goalService");
+const cacheService = require("../services/cacheService");
 
 const getGoals = async (req, res) => {
   try {
@@ -47,6 +48,8 @@ const createGoal = async (req, res) => {
       deadline,
     });
 
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
     res.status(201).json({
       success: true,
       message: "Savings goal created successfully",
@@ -80,6 +83,8 @@ const updateGoal = async (req, res) => {
       });
     }
 
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
     res.json({
       success: true,
       message: "Savings goal updated successfully",
@@ -103,6 +108,8 @@ const deleteGoal = async (req, res) => {
         message: "Savings goal not found",
       });
     }
+
+    cacheService.invalidateUserDashboardCache(req.user.id);
 
     res.json({
       success: true,

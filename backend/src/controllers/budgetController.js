@@ -1,4 +1,5 @@
 const budgetService = require("../services/budgetService");
+const cacheService = require("../services/cacheService");
 
 const getBudgets = async (req, res) => {
   try {
@@ -49,6 +50,8 @@ const setBudget = async (req, res) => {
       year
     );
 
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
     res.json({
       success: true,
       message: "Budget limit set successfully",
@@ -72,6 +75,8 @@ const deleteBudget = async (req, res) => {
         message: "Budget not found",
       });
     }
+
+    cacheService.invalidateUserDashboardCache(req.user.id);
 
     res.json({
       success: true,

@@ -1,4 +1,5 @@
 const transactionService = require("../services/transactionService");
+const cacheService = require("../services/cacheService");
 
 const getTransactions = async (req, res) => {
   try {
@@ -49,6 +50,8 @@ const createTransaction = async (req, res) => {
       req.body
     );
 
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
     res.status(201).json({
       success: true,
       message: "Transaction created successfully",
@@ -77,6 +80,8 @@ const updateTransaction = async (req, res) => {
       });
     }
 
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
     res.json({
       success: true,
       message: "Transaction updated successfully",
@@ -103,6 +108,8 @@ const deleteTransaction = async (req, res) => {
         message: "Transaction not found",
       });
     }
+
+    cacheService.invalidateUserDashboardCache(req.user.id);
 
     res.json({
       success: true,
