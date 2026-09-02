@@ -5,6 +5,7 @@ const {
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  bulkCreateTransactions,
 } = require("../controllers/transactionController");
 const protect = require("../middleware/authMiddleware");
 
@@ -14,6 +15,7 @@ const router = express.Router();
 router.use(protect);
 
 router.get("/", getTransactions);
+router.post("/bulk", bulkCreateTransactions);
 router.get("/:id", getTransaction);
 router.post("/", createTransaction);
 router.put("/:id", updateTransaction);

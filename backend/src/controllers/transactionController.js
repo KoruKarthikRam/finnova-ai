@@ -123,10 +123,41 @@ const deleteTransaction = async (req, res) => {
   }
 };
 
+const bulkCreateTransactions = async (req, res) => {
+  try {
+    const { transactions } = req.body;
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide an array of transactions to import",
+      });
+    }
+
+    const created = await transactionService.bulkCreateTransactions(
+      req.user.id,
+      transactions
+    );
+
+    cacheService.invalidateUserDashboardCache(req.user.id);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully imported ${created.length} transactions!`,
+      data: created,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || "Failed to bulk import transactions",
+    });
+  }
+};
+
 module.exports = {
   getTransactions,
   getTransaction,
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  bulkCreateTransactions,
 };

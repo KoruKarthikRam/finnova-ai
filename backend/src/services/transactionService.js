@@ -39,10 +39,27 @@ const deleteTransaction = async (id, userId) => {
   return await Transaction.findOneAndDelete({ _id: id, userId });
 };
 
+const bulkCreateTransactions = async (userId, transactionsArray) => {
+  if (!Array.isArray(transactionsArray) || transactionsArray.length === 0) {
+    return [];
+  }
+
+  const formatted = transactionsArray.map((t) => {
+    const item = { ...t, userId };
+    if (!item.date || isNaN(new Date(item.date).getTime())) {
+      delete item.date;
+    }
+    return item;
+  });
+
+  return await Transaction.insertMany(formatted);
+};
+
 module.exports = {
   getAllTransactions,
   getTransactionById,
   createTransaction,
   updateTransaction,
   deleteTransaction,
+  bulkCreateTransactions,
 };

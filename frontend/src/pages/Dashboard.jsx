@@ -65,6 +65,10 @@ function Dashboard() {
   const [insights, setInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(true);
 
+  // Simulator State
+  const [wantsCutPercent, setWantsCutPercent] = useState(15);
+  const [extraSipMonthly, setExtraSipMonthly] = useState(3000);
+
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
     return {
@@ -214,6 +218,19 @@ function Dashboard() {
   const totalExpense = safeTransactions.filter((t) => t && t.type === "expense").reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
   const balance = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+
+  // Simulator Math
+  const nonEssentialCategories = new Set(["shopping", "entertainment", "others", "gift", "travel", "restaurant", "leisure"]);
+  const wantsExpenses = safeTransactions
+    .filter((t) => t && t.type === "expense" && nonEssentialCategories.has(String(t.category || "").toLowerCase().trim()))
+    .reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+
+  const monthlyWantsSavings = Math.round(wantsExpenses * (wantsCutPercent / 100));
+  const simulatedAnnualWealthAddition = (monthlyWantsSavings + extraSipMonthly) * 12;
+  
+  const baseScore = healthData?.score || 65;
+  const simulatedScore = Math.min(98, Math.max(0, baseScore + Math.round(wantsCutPercent * 0.4) + Math.round((extraSipMonthly / 1000) * 1.2)));
+  const simulatedGrade = simulatedScore >= 85 ? "A+ (Excellent)" : simulatedScore >= 75 ? "A (Optimal)" : simulatedScore >= 60 ? "B (Good)" : "C (Needs Attention)";
 
   const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "₹0";
@@ -369,6 +386,87 @@ function Dashboard() {
                 }`}>
                   {safeAnomalies.length > 0 ? `${safeAnomalies.length} Outliers` : "Active Telemetry"}
                 </span>
+              </div>
+            </div>
+          </SectionErrorBoundary>
+
+          {/* Interactive What-If Scenario Lab */}
+          <SectionErrorBoundary>
+            <div className="glass-card rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-xl space-y-6 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-800/80 pb-4">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl">🔮</span>
+                    <h3 className="text-base font-extrabold text-white tracking-tight">Interactive What-If Scenario Lab</h3>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                    Simulate how lifestyle adjustments & SIP increases instantly boost your Financial Health Score & 1-Year Wealth.
+                  </p>
+                </div>
+
+                <span className="text-xxs font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full shrink-0">
+                  Live Predictive Engine
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+                {/* Controls */}
+                <div className="space-y-5 lg:col-span-1">
+                  <div>
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-1.5">
+                      <span>Cut Non-Essential Spending:</span>
+                      <span className="text-cyan-400 font-extrabold">{wantsCutPercent}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="50"
+                      step="5"
+                      value={wantsCutPercent}
+                      onChange={(e) => setWantsCutPercent(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                    />
+                    <p className="text-xxs text-slate-500 mt-1">Saves {formatCurrency(monthlyWantsSavings)}/mo from non-essentials</p>
+                  </div>
+
+                  <div>
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-1.5">
+                      <span>Add Extra Monthly SIP:</span>
+                      <span className="text-emerald-400 font-extrabold">{formatCurrency(extraSipMonthly)}</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="20000"
+                      step="1000"
+                      value={extraSipMonthly}
+                      onChange={(e) => setExtraSipMonthly(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                    />
+                    <p className="text-xxs text-slate-500 mt-1">Routes surplus directly into compounding index funds</p>
+                  </div>
+                </div>
+
+                {/* Simulated Results */}
+                <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-cyan-500/30 space-y-1">
+                    <span className="text-xxs font-extrabold text-cyan-400 uppercase tracking-wider">Simulated Health Score</span>
+                    <p className="text-2xl font-black text-cyan-300">{simulatedScore}/100</p>
+                    <p className="text-xxs text-slate-400 font-semibold">{simulatedGrade}</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-emerald-500/30 space-y-1">
+                    <span className="text-xxs font-extrabold text-emerald-400 uppercase tracking-wider">Monthly Extra Surplus</span>
+                    <p className="text-2xl font-black text-emerald-300">+{formatCurrency(monthlyWantsSavings)}</p>
+                    <p className="text-xxs text-slate-400 font-semibold">Saved from lifestyle wants</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-gradient-to-tr from-indigo-900 to-slate-900 border border-indigo-500/40 space-y-1">
+                    <span className="text-xxs font-extrabold text-indigo-300 uppercase tracking-wider">1-Year Wealth Addition</span>
+                    <p className="text-2xl font-black text-white">+{formatCurrency(simulatedAnnualWealthAddition)}</p>
+                    <p className="text-xxs text-indigo-200 font-semibold">Added to annual savings pool</p>
+                  </div>
+                </div>
               </div>
             </div>
           </SectionErrorBoundary>

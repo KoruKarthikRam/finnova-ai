@@ -205,12 +205,191 @@ function Transactions() {
 
   const allCategories = Array.from(new Set([...expenseCategories, ...incomeCategories]));
 
+  // CSV Import Modal & Parsing State
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [csvText, setCsvText] = useState("");
+  const [parsedPreview, setParsedPreview] = useState([]);
+  const [isImporting, setIsImporting] = useState(false);
+
+  const fallbackClassify = (desc) => {
+    const text = (desc || "").toLowerCase();
+    const rules = [
+      { category: "Food", words: ["food", "lunch", "dinner", "burger", "pizza", "restaurant", "swiggy", "zomato", "grocery", "groceries", "blinkit", "zepto", "instamart", "cafe", "tea", "coffee"] },
+      { category: "Transport", words: ["uber", "ola", "petrol", "fuel", "diesel", "metro", "bus", "train", "flight", "taxi", "rapido", "auto", "irctc", "toll"] },
+      { category: "Rent", words: ["rent", "landlord", "pg", "flat", "apartment", "maintenance"] },
+      { category: "Shopping", words: ["amazon", "flipkart", "myntra", "ajio", "zara", "h&m", "clothes", "shoes", "decathlon", "shopping"] },
+      { category: "Bills", words: ["electricity", "bill", "water", "gas", "recharge", "wifi", "broadband", "jio", "airtel", "utility"] },
+      { category: "Entertainment", words: ["netflix", "spotify", "movie", "cinema", "pvr", "bookmyshow", "hotstar", "gaming", "steam"] },
+      { category: "Healthcare", words: ["doctor", "medicine", "pharmacy", "hospital", "clinic", "health", "apollo", "medplus"] },
+      { category: "Education", words: ["course", "udemy", "coursera", "school", "college", "tuition", "books", "exam", "fee"] },
+      { category: "Salary", words: ["salary", "paycheck", "stipend", "payroll", "wages"] },
+      { category: "Investment", words: ["investment", "stock", "crypto", "dividend", "mutual fund", "sip"] },
+    ];
+    for (const item of rules) {
+      if (item.words.some((w) => text.includes(w))) return item.category;
+    }
+    return "Others";
+  };
+
+  const handleParseCsv = (rawContent) => {
+    if (!rawContent || !rawContent.trim()) {
+      setParsedPreview([]);
+      return;
+    }
+
+    const lines = rawContent.trim().split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) return;
+
+    const headerLine = lines[0].toLowerCase();
+    const headers = headerLine.split(",").map(h => h.trim().replace(/^["']|["']$/g, ''));
+
+    const dateIdx = headers.findIndex(h => h.includes("date") || h.includes("txn date"));
+    const descIdx = headers.findIndex(h => h.includes("desc") || h.includes("narration") || h.includes("details") || h.includes("particulars"));
+    const amtIdx = headers.findIndex(h => h.includes("amount") || h.includes("val"));
+    const typeIdx = headers.findIndex(h => h.includes("type") || h.includes("cr/dr") || h.includes("credit/debit"));
+    const catIdx = headers.findIndex(h => h.includes("cat"));
+
+    const dataLines = lines.slice(1);
+    const parsed = [];
+
+    dataLines.forEach((line, index) => {
+      const cols = line.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || line.split(",");
+      const cleanCols = cols.map(c => c.trim().replace(/^["']|["']$/g, ''));
+
+      const rawDesc = descIdx >= 0 ? cleanCols[descIdx] : (cleanCols[1] || `Transaction #${index + 1}`);
+      let rawAmtStr = amtIdx >= 0 ? cleanCols[amtIdx] : cleanCols[2] || "0";
+      rawAmtStr = rawAmtStr.replace(/[^0-9.-]/g, '');
+      let amtNum = Math.abs(parseFloat(rawAmtStr) || 0);
+
+      let rawType = "expense";
+      if (typeIdx >= 0 && cleanCols[typeIdx]) {
+        const tVal = cleanCols[typeIdx].toLowerCase();
+        if (tVal.includes("cr") || tVal.includes("credit") || tVal.includes("income")) {
+          rawType = "income";
+        }
+      } else if (parseFloat(rawAmtStr) < 0) {
+        rawType = "expense";
+      }
+
+      let rawDate = dateIdx >= 0 ? cleanCols[dateIdx] : new Date().toISOString().split("T")[0];
+      const parsedDateObj = new Date(rawDate);
+      const safeDateStr = !isNaN(parsedDateObj.getTime()) ? parsedDateObj.toISOString().split("T")[0] : new Date().toISOString().split("T")[0];
+
+      let rawCat = catIdx >= 0 && cleanCols[catIdx] ? cleanCols[catIdx] : fallbackClassify(rawDesc);
+
+      if (amtNum > 0) {
+        parsed.push({
+          id: index,
+          selected: true,
+          date: safeDateStr,
+          description: rawDesc,
+          amount: amtNum,
+          type: rawType,
+          category: rawCat,
+          isEssential: rawType === "expense" ? true : true
+        });
+      }
+    });
+
+    setParsedPreview(parsed);
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const content = evt.target.result;
+      setCsvText(content);
+      handleParseCsv(content);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleBulkImportSubmit = async () => {
+    const selectedRows = parsedPreview.filter(p => p.selected);
+    if (selectedRows.length === 0) {
+      alert("Please select at least 1 transaction to import.");
+      return;
+    }
+
+    try {
+      setIsImporting(true);
+      const payload = selectedRows.map(r => ({
+        type: r.type,
+        amount: r.amount,
+        category: r.category,
+        description: r.description,
+        date: r.date,
+        isEssential: r.isEssential
+      }));
+
+      const response = await axios.post(`${API_BASE_URL}/api/transactions/bulk`, { transactions: payload }, getAuthConfig());
+      if (response.data.success) {
+        setSuccess(`Successfully batch imported ${response.data.data.length} transactions!`);
+        setTransactions([...response.data.data, ...transactions]);
+        setShowImportModal(false);
+        setCsvText("");
+        setParsedPreview([]);
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.response?.data?.message || "Failed to batch import transactions");
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
+  const handleExportCsv = () => {
+    if (transactions.length === 0) {
+      alert("No transaction records available to export.");
+      return;
+    }
+
+    const headers = ["Date", "Type", "Amount (INR)", "Category", "Description", "Essential"];
+    const rows = transactions.map(t => [
+      t.date ? new Date(t.date).toISOString().split("T")[0] : "",
+      t.type || "expense",
+      t.amount || 0,
+      `"${(t.category || "").replace(/"/g, '""')}"`,
+      `"${(t.description || "").replace(/"/g, '""')}"`,
+      t.isEssential ? "Need" : "Want"
+    ]);
+
+    const csvContent = [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", `FinNova_Transactions_Export_${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       {/* Page Header */}
-      <div>
-        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Transactions Hub</h1>
-        <p className="mt-2 text-slate-500">Record, filter, and track your daily financial activities.</p>
+      <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <div>
+          <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">Transactions Hub</h1>
+          <p className="mt-2 text-slate-500">Record, filter, and batch import daily financial activities.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={() => setShowImportModal(true)}
+            className="px-4 py-2.5 rounded-xl bg-indigo-50 text-indigo-600 hover:bg-indigo-100 border border-indigo-200 text-xs font-extrabold transition cursor-pointer flex items-center gap-1.5 shadow-xxs"
+          >
+            <span>📥</span> Import Bank Statement (CSV)
+          </button>
+          <button
+            onClick={handleExportCsv}
+            className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 text-xs font-bold transition cursor-pointer flex items-center gap-1.5 shadow-xxs"
+          >
+            <span>📤</span> Export CSV
+          </button>
+        </div>
       </div>
 
       {/* Notifications */}
@@ -510,6 +689,135 @@ function Transactions() {
           )}
         </div>
       </div>
+
+      {/* CSV Bank Statement Import Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-3xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-4">
+              <div>
+                <h3 className="font-extrabold text-slate-900 text-lg">Batch Import Bank Statement CSV</h3>
+                <p className="text-xs text-slate-500 mt-0.5">Upload or paste a CSV file to auto-parse and classify transactions.</p>
+              </div>
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="flex flex-col sm:flex-row gap-4 items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-200/80">
+                <div>
+                  <span className="text-xs font-bold text-slate-800">Choose CSV File</span>
+                  <p className="text-xxs text-slate-400">Supports HDFC, ICICI, SBI, Axis, Paytm & custom CSVs</p>
+                </div>
+                <input
+                  type="file"
+                  accept=".csv, text/csv"
+                  onChange={handleFileUpload}
+                  className="text-xs text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Or Paste CSV Content</label>
+                <textarea
+                  rows={3}
+                  value={csvText}
+                  onChange={(e) => {
+                    setCsvText(e.target.value);
+                    handleParseCsv(e.target.value);
+                  }}
+                  placeholder="Date, Description, Amount, Type, Category&#10;2026-09-01, Swiggy Dinner, 450, Expense, Food&#10;2026-09-02, Salary Credit, 75000, Income, Salary"
+                  className="w-full rounded-xl border border-slate-200 p-3 text-xs font-mono text-slate-800 focus:border-indigo-500 focus:outline-none"
+                />
+              </div>
+
+              {parsedPreview.length > 0 && (
+                <div className="space-y-3 pt-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-extrabold text-slate-800">
+                      Preview Parsed Records ({parsedPreview.filter(p => p.selected).length} / {parsedPreview.length} Selected)
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const allSelected = parsedPreview.every(p => p.selected);
+                        setParsedPreview(parsedPreview.map(p => ({ ...p, selected: !allSelected })));
+                      }}
+                      className="text-xxs font-bold text-indigo-600 hover:underline cursor-pointer"
+                    >
+                      Toggle All
+                    </button>
+                  </div>
+
+                  <div className="max-h-60 overflow-y-auto border border-slate-200 rounded-xl overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-100 sticky top-0 font-bold text-slate-700">
+                        <tr>
+                          <th className="p-2 text-center">Import</th>
+                          <th className="p-2">Date</th>
+                          <th className="p-2">Description</th>
+                          <th className="p-2">Type</th>
+                          <th className="p-2">Category</th>
+                          <th className="p-2 text-right">Amount (₹)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {parsedPreview.map((row, idx) => (
+                          <tr key={idx} className={row.selected ? "bg-white" : "bg-slate-50 opacity-50"}>
+                            <td className="p-2 text-center">
+                              <input
+                                type="checkbox"
+                                checked={row.selected}
+                                onChange={(e) => {
+                                  const updated = [...parsedPreview];
+                                  updated[idx].selected = e.target.checked;
+                                  setParsedPreview(updated);
+                                }}
+                                className="w-4 h-4 text-indigo-600 rounded cursor-pointer"
+                              />
+                            </td>
+                            <td className="p-2 font-mono text-xxs whitespace-nowrap">{row.date}</td>
+                            <td className="p-2 font-semibold text-slate-800 truncate max-w-[160px]">{row.description}</td>
+                            <td className="p-2">
+                              <span className={`px-2 py-0.5 rounded text-xxs font-bold ${row.type === 'income' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
+                                {row.type}
+                              </span>
+                            </td>
+                            <td className="p-2 font-medium text-slate-600">{row.category}</td>
+                            <td className="p-2 text-right font-bold">₹{row.amount.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3 pt-4 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowImportModal(false)}
+                className="px-5 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleBulkImportSubmit}
+                disabled={isImporting || parsedPreview.filter(p => p.selected).length === 0}
+                className="px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-xs font-extrabold hover:bg-indigo-700 transition shadow disabled:opacity-50 cursor-pointer"
+              >
+                {isImporting ? "Batch Importing..." : `Import Selected (${parsedPreview.filter(p => p.selected).length})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
