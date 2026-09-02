@@ -71,7 +71,10 @@ function Subscriptions() {
     setShowAddModal(false);
   };
 
-  const formatCurrency = (val) => `₹${(val || 0).toLocaleString("en-IN")}`;
+  const formatCurrency = (val) => {
+    if (val === undefined || val === null || isNaN(val)) return "₹0";
+    return `₹${Number(val).toLocaleString("en-IN")}`;
+  };
 
   return (
     <div className="max-w-6xl mx-auto space-y-8 pb-16">

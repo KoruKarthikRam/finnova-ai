@@ -295,7 +295,7 @@ function Budget() {
                       <div>
                         <h4 className="text-lg font-bold text-slate-800">{b.category}</h4>
                         <p className="text-xs text-slate-400 mt-0.5">
-                          Spent: <strong>₹{spent.toLocaleString()}</strong> of ₹{b.limit.toLocaleString()}
+                          Spent: <strong>₹{(spent || 0).toLocaleString()}</strong> of ₹{(b.limit || 0).toLocaleString()}
                         </p>
                       </div>
 
@@ -326,9 +326,9 @@ function Budget() {
 
                     {/* Description message */}
                     <div className="flex justify-between text-xs text-slate-500">
-                      <span>Remaining: ₹{Math.max(b.limit - spent, 0).toLocaleString()}</span>
+                      <span>Remaining: ₹{Math.max((b.limit || 0) - (spent || 0), 0).toLocaleString()}</span>
                       {isOverBudget && (
-                        <span className="text-rose-600 font-bold">⚠️ Exceeded by ₹{(spent - b.limit).toLocaleString()}</span>
+                        <span className="text-rose-600 font-bold">⚠️ Exceeded by ₹{Math.max((spent || 0) - (b.limit || 0), 0).toLocaleString()}</span>
                       )}
                     </div>
                   </div>

@@ -165,11 +165,11 @@ function Goals() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Targets</p>
-          <p className="mt-2 text-3xl font-bold text-slate-800">₹{totalTarget.toLocaleString()}</p>
+          <p className="mt-2 text-3xl font-bold text-slate-800">₹{(totalTarget || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Saved</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{totalSaved.toLocaleString()}</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{(totalSaved || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Overall Savings Rate</p>
@@ -310,7 +310,7 @@ function Goals() {
                     {/* Progress details */}
                     <div className="space-y-1.5">
                       <div className="flex justify-between text-xs font-semibold text-slate-600">
-                        <span>₹{g.currentAmount.toLocaleString()} saved</span>
+                        <span>₹{(g.currentAmount || 0).toLocaleString()} saved</span>
                         <span>{percent}%</span>
                       </div>
                       <div className="w-full bg-slate-200 h-3 rounded-full overflow-hidden">
@@ -322,8 +322,8 @@ function Goals() {
                         ></div>
                       </div>
                       <div className="flex justify-between text-xxs text-slate-400">
-                        <span>Target: ₹{g.targetAmount.toLocaleString()}</span>
-                        <span>Remaining: ₹{Math.max(g.targetAmount - g.currentAmount, 0).toLocaleString()}</span>
+                        <span>Target: ₹{(g.targetAmount || 0).toLocaleString()}</span>
+                        <span>Remaining: ₹{Math.max((g.targetAmount || 0) - (g.currentAmount || 0), 0).toLocaleString()}</span>
                       </div>
                     </div>
 

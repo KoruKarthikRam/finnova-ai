@@ -229,16 +229,16 @@ function Transactions() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Income</p>
-          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{totalIncome.toLocaleString()}</p>
+          <p className="mt-2 text-3xl font-bold text-emerald-600">₹{(totalIncome || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Total Expenses</p>
-          <p className="mt-2 text-3xl font-bold text-rose-600">₹{totalExpense.toLocaleString()}</p>
+          <p className="mt-2 text-3xl font-bold text-rose-600">₹{(totalExpense || 0).toLocaleString()}</p>
         </div>
         <div className="rounded-2xl bg-white p-6 shadow-sm border border-slate-100">
           <p className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Net Savings</p>
           <p className={`mt-2 text-3xl font-bold ${netSavings >= 0 ? "text-indigo-600" : "text-amber-600"}`}>
-            ₹{netSavings.toLocaleString()}
+            ₹{(netSavings || 0).toLocaleString()}
           </p>
         </div>
       </div>
@@ -479,7 +479,7 @@ function Transactions() {
                           item.type === "income" ? "text-emerald-600" : "text-rose-600"
                         }`}
                       >
-                        {item.type === "income" ? "+" : "-"}₹{item.amount.toLocaleString()}
+                        {item.type === "income" ? "+" : "-"}₹{(item.amount || 0).toLocaleString()}
                       </td>
                       <td className="py-3.5 text-center">
                         <button

@@ -332,7 +332,10 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
   const completionPercentage = Math.round((completedLessons.length / lessons.length) * 100);
 
   // Helper formatting function
-  const formatCurrency = (val) => `₹${Math.round(val).toLocaleString("en-IN")}`;
+  const formatCurrency = (val) => {
+    if (val === undefined || val === null || isNaN(val)) return "₹0";
+    return `₹${Math.round(Number(val)).toLocaleString("en-IN")}`;
+  };
 
   // Calculators Math
   // 50-30-20
