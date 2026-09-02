@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
 import SmartRecommendations from "../components/SmartRecommendations";
@@ -29,6 +29,7 @@ const COLORS = [
 ];
 
 function Dashboard() {
+  const navigate = useNavigate();
   const [transactions, setTransactions] = useState([]);
   const [budgets, setBudgets] = useState([]);
   const [goals, setGoals] = useState([]);
@@ -50,59 +51,74 @@ function Dashboard() {
     };
   };
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      const config = getAuthConfig();
-      const current = new Date();
-      const month = current.getMonth() + 1;
-      const year = current.getFullYear();
+  const fetchDashboardData = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login");
+      return;
+    }
+    const config = getAuthConfig();
+    const current = new Date();
+    const month = current.getMonth() + 1;
+    const year = current.getFullYear();
 
-      // 1. Fetch unified aggregated summary in 1 single HTTP request
-      try {
-        setLoading(true);
-        const summaryRes = await axios.get(
-          `${API_BASE_URL}/api/dashboard/summary?month=${month}&year=${year}`,
-          config
-        );
+    // 1. Fetch unified aggregated summary in 1 single HTTP request
+    try {
+      setLoading(true);
+      setError("");
+      const summaryRes = await axios.get(
+        `${API_BASE_URL}/api/dashboard/summary?month=${month}&year=${year}`,
+        config
+      );
 
-        if (summaryRes.data && summaryRes.data.success) {
-          const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data || {};
-          setTransactions(transactions || []);
-          setBudgets(budgets || []);
-          setGoals(goals || []);
-          setHealthData(healthData || null);
-          setRecommendations(recommendations || []);
-        }
-      } catch (err) {
-        console.error("Dashboard summary fetch error:", err);
-        setError("Failed to fetch dashboard metrics");
-      } finally {
-        setLoading(false);
+      if (summaryRes.data && summaryRes.data.success) {
+        const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data || {};
+        setTransactions(transactions || []);
+        setBudgets(budgets || []);
+        setGoals(goals || []);
+        setHealthData(healthData || null);
+        setRecommendations(recommendations || []);
+      } else {
+        setError(summaryRes.data?.message || "Failed to fetch dashboard metrics");
       }
+    } catch (err) {
+      console.error("Dashboard summary fetch error:", err);
+      if (err.response?.status === 401) {
+        localStorage.removeItem("token");
+        navigate("/login");
+        return;
+      }
+      setError(
+        err.response?.data?.message || "Failed to fetch dashboard metrics. Please check server connection."
+      );
+    } finally {
+      setLoading(false);
+    }
 
-      // 2. Fetch heavy AI telemetry & Gemini insights asynchronously in background
-      setInsightsLoading(true);
-      Promise.allSettled([
-        axios.get(`${API_BASE_URL}/api/ai/anomalies`, config),
-        axios.get(`${API_BASE_URL}/api/ai/forecast`, config),
-        axios.get(`${API_BASE_URL}/api/ai/insights`, config),
-      ]).then(([anomalyRes, forecastRes, insightsRes]) => {
-        if (anomalyRes.status === "fulfilled" && anomalyRes.value?.data?.success) {
-          setAnomalies(anomalyRes.value.data.anomalies || []);
-        }
-        if (forecastRes.status === "fulfilled" && forecastRes.value?.data?.success) {
-          setForecastData(forecastRes.value.data);
-        }
-        if (insightsRes.status === "fulfilled" && insightsRes.value?.data?.success) {
-          setInsights(insightsRes.value.data.insights || []);
-        }
-      }).catch((aiErr) => {
-        console.warn("Background AI fetching partial error:", aiErr);
-      }).finally(() => {
-        setInsightsLoading(false);
-      });
-    };
+    // 2. Fetch heavy AI telemetry & Gemini insights asynchronously in background
+    setInsightsLoading(true);
+    Promise.allSettled([
+      axios.get(`${API_BASE_URL}/api/ai/anomalies`, config),
+      axios.get(`${API_BASE_URL}/api/ai/forecast`, config),
+      axios.get(`${API_BASE_URL}/api/ai/insights`, config),
+    ]).then(([anomalyRes, forecastRes, insightsRes]) => {
+      if (anomalyRes.status === "fulfilled" && anomalyRes.value?.data?.success) {
+        setAnomalies(anomalyRes.value.data.anomalies || []);
+      }
+      if (forecastRes.status === "fulfilled" && forecastRes.value?.data?.success) {
+        setForecastData(forecastRes.value.data);
+      }
+      if (insightsRes.status === "fulfilled" && insightsRes.value?.data?.success) {
+        setInsights(insightsRes.value.data.insights || []);
+      }
+    }).catch((aiErr) => {
+      console.warn("Background AI fetching partial error:", aiErr);
+    }).finally(() => {
+      setInsightsLoading(false);
+    });
+  };
 
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -170,8 +186,28 @@ function Dashboard() {
 
   if (error) {
     return (
-      <div className="max-w-6xl mx-auto mt-10 rounded-3xl bg-rose-500/10 p-6 text-rose-400 border border-rose-500/20 font-bold text-xs text-center">
-        {error}
+      <div className="max-w-md mx-auto mt-16 rounded-3xl glass-card p-8 border border-rose-500/20 text-center space-y-4 shadow-xl">
+        <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto text-xl">
+          ⚠️
+        </div>
+        <h3 className="text-base font-extrabold text-white">Dashboard Unavailable</h3>
+        <p className="text-xs font-semibold text-rose-300/90 leading-relaxed">
+          {error}
+        </p>
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => fetchDashboardData()}
+            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black transition cursor-pointer"
+          >
+            🔄 Retry Loading
+          </button>
+          <Link
+            to="/login"
+            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+          >
+            Re-login
+          </Link>
+        </div>
       </div>
     );
   }

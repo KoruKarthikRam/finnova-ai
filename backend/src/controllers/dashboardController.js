@@ -10,7 +10,13 @@ const getHealthScore = async (req, res) => {
     const userId = req.user.id;
     const cacheKey = `dashboard:${userId}:health`;
     
-    const cachedData = cacheService.get(cacheKey);
+    let cachedData = null;
+    try {
+      cachedData = cacheService.get(cacheKey);
+    } catch (cacheErr) {
+      console.warn("Dashboard cache lookup warning:", cacheErr);
+    }
+
     if (cachedData) {
       return res.json({
         success: true,
@@ -20,7 +26,11 @@ const getHealthScore = async (req, res) => {
     }
 
     const healthData = await healthService.calculateHealthScore(userId);
-    cacheService.set(cacheKey, healthData, 300); // cache for 5 mins
+    try {
+      cacheService.set(cacheKey, healthData, 300); // cache for 5 mins
+    } catch (cacheErr) {
+      console.warn("Dashboard cache set warning:", cacheErr);
+    }
 
     res.json({
       success: true,
@@ -42,7 +52,13 @@ const getDashboardSummary = async (req, res) => {
     const year = parseInt(req.query.year) || current.getFullYear();
     const cacheKey = `dashboard:${userId}:summary:${month}:${year}`;
 
-    const cachedSummary = cacheService.get(cacheKey);
+    let cachedSummary = null;
+    try {
+      cachedSummary = cacheService.get(cacheKey);
+    } catch (cacheErr) {
+      console.warn("Dashboard cache lookup warning:", cacheErr);
+    }
+
     if (cachedSummary) {
       return res.json({
         success: true,
@@ -79,7 +95,11 @@ const getDashboardSummary = async (req, res) => {
       recommendations: (recommendationsRes && recommendationsRes.recommendations) || []
     };
 
-    cacheService.set(cacheKey, responseData, 300); // cache for 5 mins
+    try {
+      cacheService.set(cacheKey, responseData, 300); // cache for 5 mins
+    } catch (cacheErr) {
+      console.warn("Dashboard cache set warning:", cacheErr);
+    }
 
     res.json({
       success: true,
