@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
@@ -27,6 +27,29 @@ const COLORS = [
   "#3b82f6", // Blue
   "#94a3b8", // Slate
 ];
+
+class SectionErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err) {
+    console.error("Dashboard section render error:", err);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs font-semibold text-center">
+          ⚠️ Section temporarily unavailable
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -73,11 +96,11 @@ function Dashboard() {
 
       if (summaryRes.data && summaryRes.data.success) {
         const { transactions, budgets, goals, healthData, recommendations } = summaryRes.data.data || {};
-        setTransactions(transactions || []);
-        setBudgets(budgets || []);
-        setGoals(goals || []);
+        setTransactions(Array.isArray(transactions) ? transactions : []);
+        setBudgets(Array.isArray(budgets) ? budgets : []);
+        setGoals(Array.isArray(goals) ? goals : []);
         setHealthData(healthData || null);
-        setRecommendations(recommendations || []);
+        setRecommendations(Array.isArray(recommendations) ? recommendations : []);
       } else {
         setError(summaryRes.data?.message || "Failed to fetch dashboard metrics");
       }
@@ -103,13 +126,13 @@ function Dashboard() {
       axios.get(`${API_BASE_URL}/api/ai/insights`, config),
     ]).then(([anomalyRes, forecastRes, insightsRes]) => {
       if (anomalyRes.status === "fulfilled" && anomalyRes.value?.data?.success) {
-        setAnomalies(anomalyRes.value.data.anomalies || []);
+        setAnomalies(Array.isArray(anomalyRes.value.data.anomalies) ? anomalyRes.value.data.anomalies : []);
       }
       if (forecastRes.status === "fulfilled" && forecastRes.value?.data?.success) {
         setForecastData(forecastRes.value.data);
       }
       if (insightsRes.status === "fulfilled" && insightsRes.value?.data?.success) {
-        setInsights(insightsRes.value.data.insights || []);
+        setInsights(Array.isArray(insightsRes.value.data.insights) ? insightsRes.value.data.insights : []);
       }
     }).catch((aiErr) => {
       console.warn("Background AI fetching partial error:", aiErr);
@@ -151,9 +174,11 @@ function Dashboard() {
     (transactions || [])
       .filter((t) => t && t.type === "expense")
       .forEach((t) => {
-        const cat = t.category || "Others";
+        const cat = String(t.category || "Others");
         const amt = Number(t.amount) || 0;
-        categoryMap[cat] = (categoryMap[cat] || 0) + amt;
+        if (amt > 0) {
+          categoryMap[cat] = (categoryMap[cat] || 0) + amt;
+        }
       });
 
     return Object.keys(categoryMap).map((cat) => ({
@@ -166,8 +191,8 @@ function Dashboard() {
   const categoryData = getCategoryData();
 
   const getCombinedMonthlyData = () => {
-    const data = [...monthlyData];
-    const forecastObj = forecastData && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
+    const data = Array.isArray(monthlyData) ? [...monthlyData] : [];
+    const forecastObj = forecastData?.forecast && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
     if (forecastObj) {
       const predAmt = Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0);
       const nextM = typeof forecastObj.next_month === "string" && forecastObj.next_month.trim() !== "" ? forecastObj.next_month : null;
@@ -232,7 +257,7 @@ function Dashboard() {
     );
   }
 
-  const forecastObj = forecastData && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
+  const forecastObj = forecastData?.forecast && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
   const predictedForecastAmt = forecastObj ? Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0) : 0;
   const forecastNextMonth = forecastObj && typeof forecastObj.next_month === "string" ? forecastObj.next_month : null;
 
@@ -281,167 +306,193 @@ function Dashboard() {
       ) : (
         <>
           {/* Smart Recommendations Widget */}
-          <SmartRecommendations initialRecommendations={recommendations} />
+          <SectionErrorBoundary>
+            <SmartRecommendations initialRecommendations={recommendations} />
+          </SectionErrorBoundary>
 
           {/* Metrics Summary Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-              <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Income</span>
-              <p className="text-3xl font-black text-emerald-400">{formatCurrency(totalIncome)}</p>
-            </div>
+          <SectionErrorBoundary>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
+                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Income</span>
+                <p className="text-3xl font-black text-emerald-400">{formatCurrency(totalIncome)}</p>
+              </div>
 
-            <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-              <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Expenses</span>
-              <p className="text-3xl font-black text-rose-400">{formatCurrency(totalExpense)}</p>
-            </div>
+              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
+                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Expenses</span>
+                <p className="text-3xl font-black text-rose-400">{formatCurrency(totalExpense)}</p>
+              </div>
 
-            <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-              <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Net Surplus</span>
-              <p className={`text-3xl font-black ${balance >= 0 ? "text-gradient-cyan" : "text-amber-400"}`}>
-                {formatCurrency(balance)}
-              </p>
-            </div>
+              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
+                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Net Surplus</span>
+                <p className={`text-3xl font-black ${balance >= 0 ? "text-gradient-cyan" : "text-amber-400"}`}>
+                  {formatCurrency(balance)}
+                </p>
+              </div>
 
-            <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-              <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Savings Rate</span>
-              <div className="flex items-center gap-3">
-                <p className="text-3xl font-black text-cyan-400">{savingsRate}%</p>
-                <span className={`px-2.5 py-0.5 rounded-full text-xxs font-extrabold border ${
-                  savingsRate >= 30 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
+                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Savings Rate</span>
+                <div className="flex items-center gap-3">
+                  <p className="text-3xl font-black text-cyan-400">{savingsRate}%</p>
+                  <span className={`px-2.5 py-0.5 rounded-full text-xxs font-extrabold border ${
+                    savingsRate >= 30 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                  }`}>
+                    {savingsRate >= 30 ? "Optimal" : "Low Savings"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </SectionErrorBoundary>
+
+          {/* AI Health & Anomaly Row */}
+          <SectionErrorBoundary>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="glass-card rounded-3xl p-6 border border-cyan-500/20 flex items-center justify-between shadow-lg">
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-white text-sm">Financial Health Score</h4>
+                  <p className="text-xs text-slate-400">Grade: <span className="font-extrabold text-cyan-400">{healthData ? (healthData.grade || "N/A") : "Calculating..."}</span></p>
+                </div>
+                <span className="text-4xl font-black text-gradient-cyan">
+                  {healthData && healthData.score !== undefined && healthData.score !== null ? `${healthData.score}/100` : "--/100"}
+                </span>
+              </div>
+
+              <div className="glass-card rounded-3xl p-6 border border-amber-500/20 flex items-center justify-between shadow-lg">
+                <div className="space-y-1">
+                  <h4 className="font-extrabold text-white text-sm">ML Anomaly Detection</h4>
+                  <p className="text-xs text-slate-400">
+                    {safeAnomalies.length > 0 ? `Flagged ${safeAnomalies.length} transaction(s) deviating from behavior.` : "Zero transaction outliers flagged."}
+                  </p>
+                </div>
+                <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
+                  safeAnomalies.length > 0 ? "bg-rose-500/20 text-rose-300 border-rose-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
                 }`}>
-                  {savingsRate >= 30 ? "Optimal" : "Low Savings"}
+                  {safeAnomalies.length > 0 ? `${safeAnomalies.length} Outliers` : "Active Telemetry"}
                 </span>
               </div>
             </div>
-          </div>
-
-          {/* AI Health & Anomaly Row */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="glass-card rounded-3xl p-6 border border-cyan-500/20 flex items-center justify-between shadow-lg">
-              <div className="space-y-1">
-                <h4 className="font-extrabold text-white text-sm">Financial Health Score</h4>
-                <p className="text-xs text-slate-400">Grade: <span className="font-extrabold text-cyan-400">{healthData ? healthData.grade : "Calculating..."}</span></p>
-              </div>
-              <span className="text-4xl font-black text-gradient-cyan">
-                {healthData ? `${healthData.score}/100` : "--/100"}
-              </span>
-            </div>
-
-            <div className="glass-card rounded-3xl p-6 border border-amber-500/20 flex items-center justify-between shadow-lg">
-              <div className="space-y-1">
-                <h4 className="font-extrabold text-white text-sm">ML Anomaly Detection</h4>
-                <p className="text-xs text-slate-400">
-                  {safeAnomalies.length > 0 ? `Flagged ${safeAnomalies.length} transaction(s) deviating from behavior.` : "Zero transaction outliers flagged."}
-                </p>
-              </div>
-              <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
-                safeAnomalies.length > 0 ? "bg-rose-500/20 text-rose-300 border-rose-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
-              }`}>
-                {safeAnomalies.length > 0 ? `${safeAnomalies.length} Outliers` : "Active Telemetry"}
-              </span>
-            </div>
-          </div>
+          </SectionErrorBoundary>
 
           {/* AI Insights */}
-          <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4">
-            <div className="flex justify-between items-center border-b border-slate-800/60 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🧠</span>
-                <h4 className="font-extrabold text-white text-sm">Gemini AI Advisor Insights</h4>
+          <SectionErrorBoundary>
+            <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-800/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl">🧠</span>
+                  <h4 className="font-extrabold text-white text-sm">Gemini AI Advisor Insights</h4>
+                </div>
+                <span className="flex items-center gap-1.5 text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+                  Gemini 3.6 Flash Active
+                </span>
               </div>
-              <span className="flex items-center gap-1.5 text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-                <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                Gemini 3.6 Flash Active
-              </span>
+
+              {insightsLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
+                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                    <div className="h-3 bg-slate-800 rounded w-3/4"></div>
+                    <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                    <div className="h-3 bg-slate-800 rounded w-5/6"></div>
+                    <div className="h-3 bg-slate-800/60 rounded w-2/3"></div>
+                  </div>
+                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
+                    <div className="h-3 bg-slate-800 rounded w-4/5"></div>
+                    <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                  </div>
+                </div>
+              ) : safeInsights.length === 0 ? (
+                <p className="text-xs text-slate-400">No insights available.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {safeInsights.map((insight, idx) => {
+                    const displayText = typeof insight === "string"
+                      ? insight
+                      : typeof insight === "object" && insight !== null
+                      ? insight.text || insight.insight || insight.description || insight.message || insight.advice || insight.title || JSON.stringify(insight)
+                      : String(insight || "");
+
+                    return (
+                      <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
+                        💡 {displayText}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-
-            {insightsLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
-                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                  <div className="h-3 bg-slate-800 rounded w-3/4"></div>
-                  <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
-                </div>
-                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                  <div className="h-3 bg-slate-800 rounded w-5/6"></div>
-                  <div className="h-3 bg-slate-800/60 rounded w-2/3"></div>
-                </div>
-                <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                  <div className="h-3 bg-slate-800 rounded w-4/5"></div>
-                  <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
-                </div>
-              </div>
-            ) : safeInsights.length === 0 ? (
-              <p className="text-xs text-slate-400">No insights available.</p>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {safeInsights.map((insight, idx) => {
-                  const displayText = typeof insight === "string"
-                    ? insight
-                    : typeof insight === "object" && insight !== null
-                    ? insight.text || insight.insight || insight.description || insight.message || insight.advice || insight.title || JSON.stringify(insight)
-                    : String(insight || "");
-
-                  return (
-                    <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
-                      💡 {displayText}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          </SectionErrorBoundary>
 
           {/* Recharts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <div className="glass-card rounded-3xl p-6 border border-slate-800/80 lg:col-span-2 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-extrabold text-white">Monthly Cashflow Telemetry</h3>
-                {predictedForecastAmt > 0 && (
-                  <span className="text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-                    🔮 Next Est ({forecastNextMonth || "Next Month"}): {formatCurrency(predictedForecastAmt)}
-                  </span>
+          <SectionErrorBoundary>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              
+              <div className="glass-card rounded-3xl p-6 border border-slate-800/80 lg:col-span-2 space-y-4">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-sm font-extrabold text-white">Monthly Cashflow Telemetry</h3>
+                  {predictedForecastAmt > 0 && (
+                    <span className="text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
+                      🔮 Next Est ({forecastNextMonth || "Next Month"}): {formatCurrency(predictedForecastAmt)}
+                    </span>
+                  )}
+                </div>
+                {combinedMonthlyData.length === 0 ? (
+                  <div className="h-72 flex flex-col items-center justify-center text-center p-4">
+                    <span className="text-3xl mb-2">📊</span>
+                    <p className="text-xs text-slate-400 font-medium">No monthly cashflow telemetry recorded yet.</p>
+                  </div>
+                ) : (
+                  <div className="h-72">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={combinedMonthlyData}>
+                        <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
+                        <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
+                        <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
+                        <Legend />
+                        <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="expense" name="Expenses" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 )}
               </div>
-              <div className="h-72">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={combinedMonthlyData}>
-                    <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
-                    <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                    <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
-                    <Legend />
-                    <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expense" name="Expenses" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
 
-            <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4 flex flex-col justify-between">
-              <h3 className="text-sm font-extrabold text-white">Category Allocation</h3>
-              <div className="h-56 relative flex items-center justify-center">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value">
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-xxs font-bold text-slate-400">
-                {categoryData.map((item, idx) => (
-                  <div key={item.name} className="flex items-center gap-1.5 truncate">
-                    <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
-                    <span className="truncate">{item.name}</span>
+              <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4 flex flex-col justify-between">
+                <h3 className="text-sm font-extrabold text-white">Category Allocation</h3>
+                {categoryData.length === 0 ? (
+                  <div className="h-56 flex flex-col items-center justify-center text-center p-4">
+                    <span className="text-2xl mb-1">🍰</span>
+                    <p className="text-xs text-slate-400 font-medium">No expense category data recorded yet.</p>
                   </div>
-                ))}
+                ) : (
+                  <>
+                    <div className="h-56 relative flex items-center justify-center">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={75} paddingAngle={4} dataKey="value">
+                            {categoryData.map((entry, index) => (
+                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xxs font-bold text-slate-400">
+                      {categoryData.map((item, idx) => (
+                        <div key={item.name} className="flex items-center gap-1.5 truncate">
+                          <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
+                          <span className="truncate">{item.name}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
 
-          </div>
+            </div>
+          </SectionErrorBoundary>
         </>
       )}
 
