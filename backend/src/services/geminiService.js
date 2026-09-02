@@ -211,17 +211,33 @@ const generateInsights = async (userContext) => {
     
     // Clean up any markdown blocks if the model wraps them anyway
     const cleanText = text.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
-    const insightsArray = JSON.parse(cleanText);
+    let insightsArray = [];
+    try {
+      const parsed = JSON.parse(cleanText);
+      insightsArray = Array.isArray(parsed) ? parsed : [parsed];
+    } catch (parseErr) {
+      // If LLM returned bullet points text instead of JSON array
+      insightsArray = text.split("\n").map(s => s.replace(/^[-*•\d.]+\s*/, "").trim()).filter(Boolean);
+    }
+
+    // Ensure every element is a plain string
+    const stringInsights = insightsArray.map(item => {
+      if (typeof item === "string") return item;
+      if (typeof item === "object" && item !== null) {
+        return item.text || item.insight || item.description || item.message || item.advice || item.title || JSON.stringify(item);
+      }
+      return String(item || "");
+    }).filter(Boolean);
 
     return {
-      insights: Array.isArray(insightsArray) ? insightsArray : [insightsArray],
+      insights: stringInsights.length > 0 ? stringInsights : ["Keep tracking your daily spending to optimize your savings."],
       isMock: false
     };
   } catch (error) {
     console.error("Error generating insights from Gemini:", error.message);
     // Fallback to rules-based insights if LLM fails
     const mockInsights = [
-      `Your current balance is ₹${userContext.balance.toLocaleString('en-IN')}. Keep tracking your daily transactions.`,
+      `Your current balance is ₹${(userContext.balance || 0).toLocaleString('en-IN')}. Keep tracking your daily transactions.`,
     ];
     if (userContext.healthScore !== null && userContext.healthScore < 60) {
       mockInsights.push("Your financial health score is under 60. We recommend scaling back on non-essential spending (Wants) to improve budget adherence.");

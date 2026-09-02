@@ -167,12 +167,12 @@ function Dashboard() {
 
   const getCombinedMonthlyData = () => {
     const data = [...monthlyData];
-    const forecastObj = forecastData?.forecast;
+    const forecastObj = forecastData && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
     if (forecastObj) {
       const predAmt = Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0);
-      const nextM = forecastObj.next_month;
+      const nextM = typeof forecastObj.next_month === "string" && forecastObj.next_month.trim() !== "" ? forecastObj.next_month : null;
       if (predAmt > 0 && nextM) {
-        if (!data.some((item) => item.month === nextM)) {
+        if (!data.some((item) => item && item.month === nextM)) {
           data.push({ month: nextM, income: 0, expense: predAmt, isForecast: true });
         }
       }
@@ -232,9 +232,9 @@ function Dashboard() {
     );
   }
 
-  const forecastObj = forecastData?.forecast;
+  const forecastObj = forecastData && typeof forecastData.forecast === "object" ? forecastData.forecast : null;
   const predictedForecastAmt = forecastObj ? Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0) : 0;
-  const forecastNextMonth = forecastObj?.next_month;
+  const forecastNextMonth = forecastObj && typeof forecastObj.next_month === "string" ? forecastObj.next_month : null;
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16 relative bg-dot-grid">
@@ -374,11 +374,19 @@ function Dashboard() {
               <p className="text-xs text-slate-400">No insights available.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {safeInsights.map((insight, idx) => (
-                  <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
-                    💡 {insight}
-                  </div>
-                ))}
+                {safeInsights.map((insight, idx) => {
+                  const displayText = typeof insight === "string"
+                    ? insight
+                    : typeof insight === "object" && insight !== null
+                    ? insight.text || insight.insight || insight.description || insight.message || insight.advice || insight.title || JSON.stringify(insight)
+                    : String(insight || "");
+
+                  return (
+                    <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
+                      💡 {displayText}
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>

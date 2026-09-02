@@ -247,12 +247,20 @@ function Reports() {
                 <span>🧠</span> Gemini AI Advisor Recommendations
               </h4>
               <ul className="space-y-2">
-                {report.advisorInsights.map((insight, idx) => (
-                  <li key={idx} className="text-xs text-indigo-900 flex items-start gap-2 leading-relaxed">
-                    <span className="text-indigo-600 font-bold">•</span>
-                    <span>{insight}</span>
-                  </li>
-                ))}
+                {report.advisorInsights.map((insight, idx) => {
+                  const displayText = typeof insight === "string"
+                    ? insight
+                    : typeof insight === "object" && insight !== null
+                    ? insight.text || insight.insight || insight.description || insight.message || insight.advice || insight.title || JSON.stringify(insight)
+                    : String(insight || "");
+
+                  return (
+                    <li key={idx} className="text-xs text-indigo-900 flex items-start gap-2 leading-relaxed">
+                      <span className="text-indigo-600 font-bold">•</span>
+                      <span>{displayText}</span>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           )}
