@@ -124,27 +124,36 @@ function Dashboard() {
 
   const getMonthlyData = () => {
     const monthlyMap = {};
-    transactions.forEach((t) => {
+    (transactions || []).forEach((t) => {
+      if (!t || !t.date) return;
       const dateObj = new Date(t.date);
+      if (isNaN(dateObj.getTime())) return;
       const monthYear = dateObj.toLocaleString("en-IN", { month: "short", year: "2-digit" });
       if (!monthlyMap[monthYear]) {
         monthlyMap[monthYear] = { month: monthYear, income: 0, expense: 0, savings: 0 };
       }
-      if (t.type === "income") monthlyMap[monthYear].income += t.amount;
-      else monthlyMap[monthYear].expense += t.amount;
+      const amt = Number(t.amount) || 0;
+      if (t.type === "income") monthlyMap[monthYear].income += amt;
+      else monthlyMap[monthYear].expense += amt;
     });
 
     return Object.values(monthlyMap)
       .map((item) => ({ ...item, savings: item.income - item.expense }))
-      .sort((a, b) => new Date("01 " + a.month) - new Date("01 " + b.month));
+      .sort((a, b) => {
+        const dA = new Date("01 " + a.month).getTime() || 0;
+        const dB = new Date("01 " + b.month).getTime() || 0;
+        return dA - dB;
+      });
   };
 
   const getCategoryData = () => {
     const categoryMap = {};
-    transactions
-      .filter((t) => t.type === "expense")
+    (transactions || [])
+      .filter((t) => t && t.type === "expense")
       .forEach((t) => {
-        categoryMap[t.category] = (categoryMap[t.category] || 0) + t.amount;
+        const cat = t.category || "Others";
+        const amt = Number(t.amount) || 0;
+        categoryMap[cat] = (categoryMap[cat] || 0) + amt;
       });
 
     return Object.keys(categoryMap).map((cat) => ({
@@ -158,22 +167,33 @@ function Dashboard() {
 
   const getCombinedMonthlyData = () => {
     const data = [...monthlyData];
-    if (forecastData && forecastData.forecast && forecastData.forecast.predicted_amount > 0 && forecastData.forecast.next_month) {
-      const { next_month, predicted_amount } = forecastData.forecast;
-      if (!data.some((item) => item.month === next_month)) {
-        data.push({ month: next_month, income: 0, expense: predicted_amount, isForecast: true });
+    const forecastObj = forecastData?.forecast;
+    if (forecastObj) {
+      const predAmt = Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0);
+      const nextM = forecastObj.next_month;
+      if (predAmt > 0 && nextM) {
+        if (!data.some((item) => item.month === nextM)) {
+          data.push({ month: nextM, income: 0, expense: predAmt, isForecast: true });
+        }
       }
     }
     return data;
   };
   const combinedMonthlyData = getCombinedMonthlyData();
 
-  const totalIncome = transactions.filter((t) => t.type === "income").reduce((sum, i) => sum + i.amount, 0);
-  const totalExpense = transactions.filter((t) => t.type === "expense").reduce((sum, i) => sum + i.amount, 0);
+  const safeTransactions = Array.isArray(transactions) ? transactions : [];
+  const safeAnomalies = Array.isArray(anomalies) ? anomalies : [];
+  const safeInsights = Array.isArray(insights) ? insights : [];
+
+  const totalIncome = safeTransactions.filter((t) => t && t.type === "income").reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
+  const totalExpense = safeTransactions.filter((t) => t && t.type === "expense").reduce((sum, i) => sum + (Number(i.amount) || 0), 0);
   const balance = totalIncome - totalExpense;
   const savingsRate = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
 
-  const formatCurrency = (val) => `₹${val.toLocaleString("en-IN")}`;
+  const formatCurrency = (val) => {
+    if (val === undefined || val === null || isNaN(val)) return "₹0";
+    return `₹${Number(val).toLocaleString("en-IN")}`;
+  };
 
   if (loading) {
     return (
@@ -212,6 +232,10 @@ function Dashboard() {
     );
   }
 
+  const forecastObj = forecastData?.forecast;
+  const predictedForecastAmt = forecastObj ? Number(forecastObj.predicted_amount ?? forecastObj.predicted_expense ?? 0) : 0;
+  const forecastNextMonth = forecastObj?.next_month;
+
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16 relative bg-dot-grid">
       
@@ -238,7 +262,7 @@ function Dashboard() {
         </div>
       </div>
 
-      {transactions.length === 0 ? (
+      {safeTransactions.length === 0 ? (
         <div className="rounded-3xl glass-card p-12 text-center border border-slate-800/80 space-y-4">
           <div className="mx-auto w-16 h-16 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center text-3xl">
             📊
@@ -307,13 +331,13 @@ function Dashboard() {
               <div className="space-y-1">
                 <h4 className="font-extrabold text-white text-sm">ML Anomaly Detection</h4>
                 <p className="text-xs text-slate-400">
-                  {anomalies.length > 0 ? `Flagged ${anomalies.length} transaction(s) deviating from behavior.` : "Zero transaction outliers flagged."}
+                  {safeAnomalies.length > 0 ? `Flagged ${safeAnomalies.length} transaction(s) deviating from behavior.` : "Zero transaction outliers flagged."}
                 </p>
               </div>
               <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
-                anomalies.length > 0 ? "bg-rose-500/20 text-rose-300 border-rose-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                safeAnomalies.length > 0 ? "bg-rose-500/20 text-rose-300 border-rose-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
               }`}>
-                {anomalies.length > 0 ? `${anomalies.length} Outliers` : "Active Telemetry"}
+                {safeAnomalies.length > 0 ? `${safeAnomalies.length} Outliers` : "Active Telemetry"}
               </span>
             </div>
           </div>
@@ -346,11 +370,11 @@ function Dashboard() {
                   <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
                 </div>
               </div>
-            ) : insights.length === 0 ? (
+            ) : safeInsights.length === 0 ? (
               <p className="text-xs text-slate-400">No insights available.</p>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {insights.map((insight, idx) => (
+                {safeInsights.map((insight, idx) => (
                   <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
                     💡 {insight}
                   </div>
@@ -365,9 +389,9 @@ function Dashboard() {
             <div className="glass-card rounded-3xl p-6 border border-slate-800/80 lg:col-span-2 space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-extrabold text-white">Monthly Cashflow Telemetry</h3>
-                {forecastData && forecastData.forecast && (
+                {predictedForecastAmt > 0 && (
                   <span className="text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-                    🔮 Next Est ({forecastData.forecast.next_month}): {formatCurrency(forecastData.forecast.predicted_amount)}
+                    🔮 Next Est ({forecastNextMonth || "Next Month"}): {formatCurrency(predictedForecastAmt)}
                   </span>
                 )}
               </div>
