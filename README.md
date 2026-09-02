@@ -338,5 +338,5 @@ Distributed under the **MIT License**. See `LICENSE` for more information.
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by <b><a href="https://github.com/KoruKarthikRam">Koru Karthik Ram</a></b> & <b>FinNova Team</b></sub>
+  <sub>Built with ❤️ by <b><a href="https://github.com/KoruKarthikRam">Karthik Ram Koru</a></b> & <b>FinNova Team</b></sub>
 </div>
