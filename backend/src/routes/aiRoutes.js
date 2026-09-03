@@ -1,5 +1,5 @@
 const express = require("express");
-const { testAiServiceConnection, classifyTransaction, getTransactionAnomalies, getTransactionForecast, chatWithAssistant, getAiInsights, generateTopicQuiz } = require("../controllers/aiController");
+const { testAiServiceConnection, classifyTransaction, getTransactionAnomalies, getTransactionForecast, chatWithAssistant, getAiInsights } = require("../controllers/aiController");
 const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
@@ -13,7 +13,6 @@ router.get("/anomalies", getTransactionAnomalies);
 router.get("/forecast", getTransactionForecast);
 router.post("/chat", chatWithAssistant);
 router.get("/insights", getAiInsights);
-router.post("/quiz", generateTopicQuiz);
 
 module.exports = router;
 

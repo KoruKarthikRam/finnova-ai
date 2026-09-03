@@ -35,7 +35,6 @@ function Navbar() {
     { path: "/budget", label: "Budget", icon: "⚖️" },
     { path: "/goals", label: "Goals", icon: "🎯" },
     { path: "/learning", label: "Learning", icon: "🎓" },
-    { path: "/quiz", label: "AI Quiz", icon: "✍️" },
     { path: "/reports", label: "Reports", icon: "📄" },
     { path: "/subscriptions", label: "Subscriptions", icon: "💳" },
     { path: "/assistant", label: "AI Assistant", icon: "🤖" },

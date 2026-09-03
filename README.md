@@ -68,7 +68,7 @@
 ### 📊 7. Visual Dashboards & Goal Management
 * **Interactive Data Visualization**: Comprehensive charts powered by `Recharts` showing MoM trends, essential vs. non-essential spending ratios, and category breakdowns.
 * **Savings Goals & Budget Targets**: Track progress toward custom savings milestones with real-time target indicators.
-* **Gamified Financial Literacy**: Built-in quizzes and educational modules for user empowerment.
+* **Gamified Financial Literacy**: Interactive educational masterclasses and concept calculators for user empowerment.
 
 ---
 

@@ -10,7 +10,6 @@ import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Goals from "./pages/Goals";
 import Learning from "./pages/Learning";
-import Quiz from "./pages/Quiz";
 import Reports from "./pages/Reports";
 import Subscriptions from "./pages/Subscriptions";
 import Assistant from "./pages/Assistant";
@@ -119,14 +118,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <Learning />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/quiz"
-            element={
-              <ProtectedRoute>
-                <Quiz />
               </ProtectedRoute>
             }
           />

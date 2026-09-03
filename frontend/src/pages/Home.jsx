@@ -84,17 +84,6 @@ function Home() {
       metrics: "Executive PDF Ready"
     },
     {
-      id: "quiz",
-      title: "AI Interactive Quizzes",
-      category: "ml",
-      desc: "Dynamic financial knowledge quiz engine with instant step player & detailed AI explanations.",
-      icon: "✍️",
-      tag: "GEMINI 3.6",
-      color: "border-purple-500/30 text-purple-300 bg-purple-500/10",
-      path: "/quiz",
-      metrics: "Adaptive Questioning"
-    },
-    {
       id: "goals",
       title: "Wealth Goal Planner",
       category: "calculators",

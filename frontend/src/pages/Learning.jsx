@@ -1,8 +1,6 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
 function Learning() {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCalculator, setActiveCalculator] = useState("50-30-20");
@@ -410,13 +408,6 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
                 ></div>
               </div>
             </div>
-
-            <button
-              onClick={() => navigate("/quiz")}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-extrabold text-xs shadow-md transition duration-200 cursor-pointer flex items-center gap-2 border border-indigo-400/30 shrink-0"
-            >
-              <span>🎯</span> Take AI Quiz
-            </button>
           </div>
         </div>
       </div>

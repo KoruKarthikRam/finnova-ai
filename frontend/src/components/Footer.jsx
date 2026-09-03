@@ -45,7 +45,6 @@ function Footer() {
             <h4 className="font-extrabold text-white text-xs uppercase tracking-wider">AI & Learning</h4>
             <ul className="space-y-2 font-medium">
               <li><Link to="/learning" className="hover:text-indigo-400 transition">Learning Masterclass Hub</Link></li>
-              <li><Link to="/quiz" className="hover:text-indigo-400 transition">AI-Generated Quizzes</Link></li>
               <li><Link to="/reports" className="hover:text-indigo-400 transition">Intelligent Monthly Reports</Link></li>
               <li><Link to="/assistant" className="hover:text-indigo-400 transition">AI Assistant Chat</Link></li>
             </ul>
