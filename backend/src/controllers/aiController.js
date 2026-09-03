@@ -152,53 +152,50 @@ const chatWithAssistant = async (req, res) => {
   }
 
   try {
+    const current = new Date();
+    const currentMonth = current.getMonth() + 1;
+    const currentYear = current.getFullYear();
+    const userId = req.user.id;
+
+    // Execute context queries & RAG search in PARALLEL for maximum speed
+    const [txResult, budgetResult, healthResult, ragResult] = await Promise.allSettled([
+      useContext ? transactionService.getAllTransactions(userId) : Promise.resolve([]),
+      useContext ? budgetService.getBudgets(userId, currentMonth, currentYear) : Promise.resolve([]),
+      useContext ? healthService.calculateHealthScore(userId) : Promise.resolve(null),
+      searchKnowledge(message)
+    ]);
+
     let userContext = null;
     if (useContext) {
-      try {
-        const transactions = await transactionService.getAllTransactions(req.user.id);
-        
-        const current = new Date();
-        const currentMonth = current.getMonth() + 1;
-        const currentYear = current.getFullYear();
-        
-        const currentMonthTransactions = transactions.filter(t => {
-          const d = new Date(t.date);
-          return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
-        });
+      const transactions = txResult.status === "fulfilled" && Array.isArray(txResult.value) ? txResult.value : [];
+      const budgets = budgetResult.status === "fulfilled" && Array.isArray(budgetResult.value) ? budgetResult.value : [];
+      const healthData = healthResult.status === "fulfilled" ? healthResult.value : null;
 
-        const totalIncome = currentMonthTransactions
-          .filter((t) => t.type === "income")
-          .reduce((sum, item) => sum + item.amount, 0);
+      const currentMonthTransactions = transactions.filter((t) => {
+        const d = new Date(t.date);
+        return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
+      });
 
-        const totalExpenses = currentMonthTransactions
-          .filter((t) => t.type === "expense")
-          .reduce((sum, item) => sum + item.amount, 0);
+      const totalIncome = currentMonthTransactions
+        .filter((t) => t.type === "income")
+        .reduce((sum, item) => sum + item.amount, 0);
 
-        const balance = totalIncome - totalExpenses;
+      const totalExpenses = currentMonthTransactions
+        .filter((t) => t.type === "expense")
+        .reduce((sum, item) => sum + item.amount, 0);
 
-        const budgets = await budgetService.getBudgets(req.user.id, currentMonth, currentYear);
-        const healthResult = await healthService.calculateHealthScore(req.user.id);
-
-        userContext = {
-          balance,
-          totalIncome,
-          totalExpenses,
-          budgets: budgets.map(b => ({ category: b.category, limit: b.limit })),
-          healthScore: healthResult ? healthResult.score : null
-        };
-      } catch (contextError) {
-        console.error("Failed to gather user context for Gemini prompt:", contextError.message);
-      }
+      userContext = {
+        balance: totalIncome - totalExpenses,
+        totalIncome,
+        totalExpenses,
+        budgets: budgets.map((b) => ({ category: b.category, limit: b.limit })),
+        healthScore: healthData ? healthData.score : null
+      };
     }
 
     let ragContext = null;
-    try {
-      const searchRes = await searchKnowledge(message);
-      if (searchRes && searchRes.success && searchRes.matches) {
-        ragContext = searchRes.matches;
-      }
-    } catch (ragError) {
-      console.warn("Failed to fetch RAG context from knowledge base:", ragError.message);
+    if (ragResult.status === "fulfilled" && ragResult.value?.success && ragResult.value?.matches) {
+      ragContext = ragResult.value.matches;
     }
 
     const response = await generateChatResponse(message, history, userContext, ragContext);

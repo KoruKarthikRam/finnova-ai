@@ -60,7 +60,7 @@ const getForecast = async (transactions) => {
 
 const searchKnowledge = async (query, limit = 3) => {
   try {
-    const response = await aiServiceClient.post("/search-knowledge", { query, limit }, { timeout: 2500 });
+    const response = await aiServiceClient.post("/search-knowledge", { query, limit }, { timeout: 1200 });
     return response.data;
   } catch (error) {
     console.error("AI Service search knowledge failed:", error.message);
