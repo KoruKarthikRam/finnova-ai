@@ -24,7 +24,7 @@ const initGemini = () => {
 /**
  * Retrieves the Gemini model with system instructions pre-configured.
  */
-const getModel = () => {
+const getModel = (modelName = "gemini-1.5-flash") => {
   if (!genAI) {
     const isInitialized = initGemini();
     if (!isInitialized) return null;
@@ -42,22 +42,21 @@ const getModel = () => {
     `5. Provide structured, readable answers using clear markdown headers, bold text, and lists where appropriate. \n` +
     `6. When user transaction data, budgets, or financial health summaries are provided, analyze them constructively to offer tailored budgeting suggestions. Keep suggestions encouraging and actionable.`;
 
-  try {
-    return genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      systemInstruction: systemInstruction,
-    });
-  } catch (error) {
-    console.error("Error fetching generative model:", error.message);
+  const candidateModels = [modelName, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-pro"];
+  const uniqueCandidates = [...new Set(candidateModels)];
+
+  for (const name of uniqueCandidates) {
     try {
-      return genAI.getGenerativeModel({
-        model: "gemini-pro",
+      const model = genAI.getGenerativeModel({
+        model: name,
         systemInstruction: systemInstruction,
       });
-    } catch (fallbackErr) {
-      return null;
+      if (model) return model;
+    } catch (e) {
+      console.warn(`Could not load model ${name}:`, e.message);
     }
   }
+  return null;
 };
 
 /**
@@ -81,11 +80,12 @@ const generateChatResponse = async (message, history = [], userContext = null, r
       };
     }
 
-    // Format history for Google Generative AI
+    // Format and sanitize history for Google Generative AI
     // Structure expected: { role: 'user' | 'model', parts: [{ text: string }] }
+    // Gemini SDK requires history to start with 'user' and alternate 'user' -> 'model'
     const formattedHistory = [];
-    if (Array.isArray(history)) {
-      let expectedRole = "user"; // Start with user
+    if (Array.isArray(history) && history.length > 0) {
+      let expectedRole = "user"; // First turn in Gemini history MUST be 'user'
       for (const turn of history) {
         let role = turn.role === "assistant" || turn.role === "model" ? "model" : "user";
         let text = "";
@@ -105,6 +105,11 @@ const generateChatResponse = async (message, history = [], userContext = null, r
           });
           expectedRole = expectedRole === "user" ? "model" : "user";
         }
+      }
+
+      // Gemini history MUST end with 'model' so chat.sendMessage(finalPrompt) can send the next 'user' turn.
+      if (formattedHistory.length > 0 && formattedHistory[formattedHistory.length - 1].role === "user") {
+        formattedHistory.pop();
       }
     }
 
@@ -138,18 +143,30 @@ const generateChatResponse = async (message, history = [], userContext = null, r
       finalPrompt = message;
     }
 
-    const chat = model.startChat({
-      history: formattedHistory,
-    });
+    try {
+      const chat = model.startChat({
+        history: formattedHistory,
+      });
 
-    const result = await chat.sendMessage(finalPrompt);
-    const response = await result.response;
-    const text = response.text();
+      const result = await chat.sendMessage(finalPrompt);
+      const response = await result.response;
+      const text = response.text();
 
-    return {
-      text: text,
-      isMock: false
-    };
+      return {
+        text: text,
+        isMock: false
+      };
+    } catch (chatErr) {
+      console.warn("Gemini startChat/sendMessage error, falling back to single-turn generateContent:", chatErr.message);
+      const singleResult = await model.generateContent(finalPrompt);
+      const singleResponse = await singleResult.response;
+      const text = singleResponse.text();
+
+      return {
+        text: text,
+        isMock: false
+      };
+    }
   } catch (error) {
     console.error("Error generating response from Gemini:", error.message);
     return {
