@@ -40,7 +40,8 @@ const getModel = (modelName = "gemini-3.6-flash") => {
     `3. Do NOT make specific stock tips, day trading suggestions, or give definitive legal or tax filings advice. Advise consulting professional tax advisors where appropriate. \n` +
     `4. If the user asks questions that are completely unrelated to personal finance, budgeting, economics, career development, or financial goals, politely decline to answer and guide them back to financial topics. \n` +
     `5. Provide structured, readable answers using clear markdown headers, bold text, and lists where appropriate. \n` +
-    `6. When user transaction data, budgets, or financial health summaries are provided, analyze them constructively to offer tailored budgeting suggestions. Keep suggestions encouraging and actionable.`;
+    `6. When user transaction data, budgets, or financial health summaries are provided, analyze them constructively to offer tailored budgeting suggestions. Keep suggestions encouraging and actionable. \n` +
+    `7. Keep your responses concise, well-structured, and under 250 words so that answers generate extremely fast.`;
 
   const candidateModels = [modelName, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-1.5-flash"];
   const uniqueCandidates = [...new Set(candidateModels)];
@@ -50,6 +51,11 @@ const getModel = (modelName = "gemini-3.6-flash") => {
       const model = genAI.getGenerativeModel({
         model: name,
         systemInstruction: systemInstruction,
+        generationConfig: {
+          maxOutputTokens: 600,
+          temperature: 0.4,
+          topP: 0.8,
+        }
       });
       if (model) return model;
     } catch (e) {
