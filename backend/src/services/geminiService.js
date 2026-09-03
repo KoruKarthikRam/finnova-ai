@@ -24,7 +24,7 @@ const initGemini = () => {
 /**
  * Retrieves the Gemini model with system instructions pre-configured.
  */
-const getModel = (modelName = "gemini-1.5-flash") => {
+const getModel = (modelName = "gemini-3.6-flash") => {
   if (!genAI) {
     const isInitialized = initGemini();
     if (!isInitialized) return null;
@@ -42,7 +42,7 @@ const getModel = (modelName = "gemini-1.5-flash") => {
     `5. Provide structured, readable answers using clear markdown headers, bold text, and lists where appropriate. \n` +
     `6. When user transaction data, budgets, or financial health summaries are provided, analyze them constructively to offer tailored budgeting suggestions. Keep suggestions encouraging and actionable.`;
 
-  const candidateModels = [modelName, "gemini-1.5-flash", "gemini-2.0-flash", "gemini-1.5-pro", "gemini-pro"];
+  const candidateModels = [modelName, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-1.5-flash"];
   const uniqueCandidates = [...new Set(candidateModels)];
 
   for (const name of uniqueCandidates) {
