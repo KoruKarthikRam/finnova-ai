@@ -512,7 +512,7 @@ def init_knowledge_base():
     if kb_chunks:
         # Fit vectorizer on all text chunks
         texts = [chunk["text"] for chunk in kb_chunks]
-        kb_vectorizer = TfidfVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english')
+        kb_vectorizer = TfidfVectorizer(ngram_range=(1, 2), lowercase=True, stop_words='english', sublinear_tf=True)
         kb_tfidf_matrix = kb_vectorizer.fit_transform(texts)
         print(f"Knowledge base successfully indexed with {len(kb_chunks)} chunks.")
     else:

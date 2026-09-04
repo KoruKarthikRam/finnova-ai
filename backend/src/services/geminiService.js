@@ -24,7 +24,7 @@ const initGemini = () => {
 /**
  * Retrieves the Gemini model with system instructions pre-configured.
  */
-const getModel = (modelName = "gemini-3.6-flash") => {
+const getModel = (modelName = "gemini-1.5-flash") => {
   if (!genAI) {
     const isInitialized = initGemini();
     if (!isInitialized) return null;
@@ -40,10 +40,10 @@ const getModel = (modelName = "gemini-3.6-flash") => {
     `3. Do NOT make specific stock tips, day trading suggestions, or give definitive legal or tax filings advice. Advise consulting professional tax advisors where appropriate. \n` +
     `4. If the user asks questions that are completely unrelated to personal finance, budgeting, economics, career development, or financial goals, politely decline to answer and guide them back to financial topics. \n` +
     `5. Provide structured, readable answers using clear markdown headers, bold text, and lists where appropriate. \n` +
-    `6. When user transaction data, budgets, or financial health summaries are provided, analyze them constructively to offer tailored budgeting suggestions. Keep suggestions encouraging and actionable. \n` +
-    `7. Keep your responses concise, well-structured, and under 250 words so that answers generate extremely fast.`;
+    `6. When user financial context (category totals, recent transactions, budgets, health score) is provided, ground your answers directly in their specific numbers. Give precise, encouraging, and actionable budgeting advice. \n` +
+    `7. Provide thorough, complete, and comprehensive responses that fully answer all aspects of the user's prompt with actionable steps without truncation or cutting off mid-sentence.`;
 
-  const candidateModels = [modelName, "gemini-3.6-flash", "gemini-3.6-pro", "gemini-1.5-flash"];
+  const candidateModels = [modelName, "gemini-1.5-flash", "gemini-2.5-flash", "gemini-1.5-pro"];
   const uniqueCandidates = [...new Set(candidateModels)];
 
   for (const name of uniqueCandidates) {
@@ -52,8 +52,8 @@ const getModel = (modelName = "gemini-3.6-flash") => {
         model: name,
         systemInstruction: systemInstruction,
         generationConfig: {
-          maxOutputTokens: 600,
-          temperature: 0.4,
+          maxOutputTokens: 1500,
+          temperature: 0.3,
           topP: 0.8,
         }
       });
@@ -91,8 +91,12 @@ const generateChatResponse = async (message, history = [], userContext = null, r
     // Gemini SDK requires history to start with 'user' and alternate 'user' -> 'model'
     const formattedHistory = [];
     if (Array.isArray(history) && history.length > 0) {
+      // Ignore leading assistant messages before the first user message
+      const firstUserIdx = history.findIndex(h => h.role === "user");
+      const validTurns = firstUserIdx !== -1 ? history.slice(firstUserIdx) : [];
+
       let expectedRole = "user"; // First turn in Gemini history MUST be 'user'
-      for (const turn of history) {
+      for (const turn of validTurns) {
         let role = turn.role === "assistant" || turn.role === "model" ? "model" : "user";
         let text = "";
         
@@ -131,15 +135,25 @@ const generateChatResponse = async (message, history = [], userContext = null, r
 
     if (userContext) {
       const activeBudgetsStr = Array.isArray(userContext.budgets) && userContext.budgets.length > 0
-        ? userContext.budgets.map(b => `${b.category}: limit ₹${b.limit}`).join(", ")
+        ? userContext.budgets.map(b => `${b.category}: limit ₹${b.limit} (Spent: ₹${b.spent || 0})`).join(", ")
         : "None";
 
+      const categoryTotalsStr = userContext.categoryTotals && Object.keys(userContext.categoryTotals).length > 0
+        ? Object.entries(userContext.categoryTotals).map(([cat, val]) => `${cat}: ₹${val}`).join(", ")
+        : "No expense transactions logged yet";
+
+      const recentTxStr = Array.isArray(userContext.recentTransactions) && userContext.recentTransactions.length > 0
+        ? userContext.recentTransactions.map(t => `- ${t.date.split("T")[0]}: ${t.description || t.category} (₹${t.amount}, ${t.type})`).join("\n")
+        : "No recent transactions";
+
       finalPrompt += `[USER FINANCIAL CONTEXT]\n` +
-        `- Current Account Balance: ₹${userContext.balance || 0}\n` +
+        `- Account Balance: ₹${userContext.balance || 0}\n` +
         `- Total Income this month: ₹${userContext.totalIncome || 0}\n` +
         `- Total Expenses this month: ₹${userContext.totalExpenses || 0}\n` +
-        `- Active Budgets: ${activeBudgetsStr}\n` +
         `- Financial Health Score: ${userContext.healthScore || "N/A"}/100\n` +
+        `- Monthly Spending by Category: ${categoryTotalsStr}\n` +
+        `- Active Budgets: ${activeBudgetsStr}\n` +
+        `- Recent Transactions:\n${recentTxStr}\n` +
         `[END OF CONTEXT]\n\n`;
     }
 

@@ -70,7 +70,7 @@ function Assistant() {
         healthScore = healthRes.value.data.data?.score;
       }
 
-      // Compute income/expenses
+      // Compute income/expenses & top categories
       const currentMonthTransactions = transactions.filter((t) => {
         const d = new Date(t.date);
         return d.getMonth() + 1 === month && d.getFullYear() === year;
@@ -78,18 +78,32 @@ function Assistant() {
 
       const totalIncome = currentMonthTransactions
         .filter((t) => t.type === "income")
-        .reduce((sum, item) => sum + item.amount, 0);
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
 
       const totalExpenses = currentMonthTransactions
         .filter((t) => t.type === "expense")
-        .reduce((sum, item) => sum + item.amount, 0);
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
 
       const balance = totalIncome - totalExpenses;
+
+      const categoryTotals = {};
+      currentMonthTransactions
+        .filter((t) => t.type === "expense")
+        .forEach((t) => {
+          const cat = t.category || "Others";
+          categoryTotals[cat] = (categoryTotals[cat] || 0) + (t.amount || 0);
+        });
+
+      const topCategories = Object.entries(categoryTotals)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 4)
+        .map(([cat, amt]) => ({ category: cat, amount: amt }));
 
       setContextData({
         balance,
         totalIncome,
         totalExpenses,
+        topCategories,
         budgets: budgets.map((b) => ({ category: b.category, limit: b.limit })),
         healthScore,
         loading: false,
@@ -126,12 +140,13 @@ function Assistant() {
     setIsLoading(true);
 
     try {
-      // Map history for Gemini API
-      // The API expects { role: 'user'|'assistant', content: string }
-      const historyPayload = messages.map((m) => ({
-        role: m.sender,
-        content: m.text,
-      }));
+      // Map history for Gemini API (filter initial greeting)
+      const historyPayload = messages
+        .filter((m, idx) => !(idx === 0 && m.sender === "assistant"))
+        .map((m) => ({
+          role: m.sender,
+          content: m.text,
+        }));
 
       const response = await axios.post(
         `${API_BASE_URL}/api/ai/chat`,
@@ -173,13 +188,14 @@ function Assistant() {
 
   // Suggestion list
   const suggestionChips = [
+    "Where did I spend the most money this month?",
     "How can I improve my financial health score?",
-    "What are the tax-saving options under Section 80C?",
+    "What tax-saving options exist under Section 80C?",
     "Explain the difference between SIP and Mutual Fund.",
     "Tell me how to start an emergency fund.",
   ];
 
-  // Helper to parse and render basic markdown text safely
+  // Helper to parse and render rich markdown text safely
   const formatMarkdown = (text) => {
     if (!text) return "";
 
@@ -192,7 +208,7 @@ function Assistant() {
     // Headings (### heading)
     html = html.replace(
       /^### (.*?)$/gm,
-      '<h4 class="text-base font-bold text-slate-800 mt-4 mb-1.5">$1</h4>'
+      '<h4 class="text-base font-bold text-slate-900 mt-4 mb-1.5">$1</h4>'
     );
     html = html.replace(
       /^## (.*?)$/gm,
@@ -203,36 +219,57 @@ function Assistant() {
       '<h2 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h2>'
     );
 
-    // Bold text (**text**)
+    // Bold text (**text**) & Inline code (`code`)
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-slate-900">$1</strong>');
+    html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-200/60 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
 
-    // Bullet points (* point or - point)
+    // Parse lists (unordered and ordered)
     const lines = html.split("\n");
-    let inList = false;
+    let inUnordered = false;
+    let inOrdered = false;
     const processedLines = lines.map((line) => {
       const trimmed = line.trim();
-      if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-        const content = trimmed.substring(2);
-        let listLine = "";
-        if (!inList) {
-          inList = true;
-          listLine += '<ul class="list-disc pl-5 my-2 space-y-1 text-slate-700">';
+      const isBullet = /^(?:[-*•])\s+(.*)/.exec(trimmed);
+      const isNum = /^(\d+)\.\s+(.*)/.exec(trimmed);
+
+      if (isBullet) {
+        let prefix = "";
+        if (inOrdered) {
+          inOrdered = false;
+          prefix += "</ol>";
         }
-        listLine += `<li>${content}</li>`;
-        return listLine;
+        if (!inUnordered) {
+          inUnordered = true;
+          prefix += '<ul class="list-disc pl-5 my-2 space-y-1 text-slate-700">';
+        }
+        return `${prefix}<li>${isBullet[1]}</li>`;
+      } else if (isNum) {
+        let prefix = "";
+        if (inUnordered) {
+          inUnordered = false;
+          prefix += "</ul>";
+        }
+        if (!inOrdered) {
+          inOrdered = true;
+          prefix += '<ol class="list-decimal pl-5 my-2 space-y-1 text-slate-700">';
+        }
+        return `${prefix}<li>${isNum[2]}</li>`;
       } else {
-        let listLine = "";
-        if (inList) {
-          inList = false;
-          listLine += "</ul>";
+        let prefix = "";
+        if (inUnordered) {
+          inUnordered = false;
+          prefix += "</ul>";
         }
-        return listLine + line;
+        if (inOrdered) {
+          inOrdered = false;
+          prefix += "</ol>";
+        }
+        return prefix + line;
       }
     });
 
-    if (inList) {
-      processedLines.push("</ul>");
-    }
+    if (inUnordered) processedLines.push("</ul>");
+    if (inOrdered) processedLines.push("</ol>");
 
     html = processedLines.join("\n");
 
@@ -242,7 +279,7 @@ function Assistant() {
     // Replace single newlines with break lines
     html = html.replace(/\n/g, "<br />");
 
-    return `<p class="leading-relaxed text-slate-700 text-sm">${html}</p>`;
+    return `<div class="leading-relaxed text-slate-700 text-sm space-y-2">${html}</div>`;
   };
 
   const clearChatHistory = () => {
@@ -482,6 +519,21 @@ function Assistant() {
                       {formatCurrency(contextData.totalIncome)} / {formatCurrency(contextData.totalExpenses)}
                     </span>
                   </div>
+
+                  {/* Top Spending Categories */}
+                  {contextData.topCategories && contextData.topCategories.length > 0 && (
+                    <div className="space-y-1.5 pt-2 border-t border-slate-50">
+                      <span className="block font-bold text-slate-600 text-xxs uppercase tracking-wider">Top Spending</span>
+                      <div className="space-y-1 divide-y divide-slate-50">
+                        {contextData.topCategories.map((item, index) => (
+                          <div key={index} className="flex justify-between text-xxs py-1">
+                            <span className="font-medium text-slate-500 capitalize">{item.category}</span>
+                            <span className="font-bold text-slate-700">{formatCurrency(item.amount)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* Budgets */}
                   <div className="space-y-1.5 pt-2 border-t border-slate-50">

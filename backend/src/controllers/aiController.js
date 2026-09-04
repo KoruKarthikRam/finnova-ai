@@ -178,17 +178,44 @@ const chatWithAssistant = async (req, res) => {
 
       const totalIncome = currentMonthTransactions
         .filter((t) => t.type === "income")
-        .reduce((sum, item) => sum + item.amount, 0);
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
 
       const totalExpenses = currentMonthTransactions
         .filter((t) => t.type === "expense")
-        .reduce((sum, item) => sum + item.amount, 0);
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      const categoryTotals = {};
+      currentMonthTransactions
+        .filter((t) => t.type === "expense")
+        .forEach((t) => {
+          const cat = t.category || "Others";
+          categoryTotals[cat] = (categoryTotals[cat] || 0) + (t.amount || 0);
+        });
+
+      const recentTransactions = [...transactions]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 8)
+        .map((t) => ({
+          date: t.date ? new Date(t.date).toISOString() : "",
+          amount: t.amount || 0,
+          category: t.category || "Others",
+          type: t.type || "expense",
+          description: t.description || ""
+        }));
+
+      const budgetsWithSpent = budgets.map((b) => ({
+        category: b.category,
+        limit: b.limit,
+        spent: categoryTotals[b.category] || 0
+      }));
 
       userContext = {
         balance: totalIncome - totalExpenses,
         totalIncome,
         totalExpenses,
-        budgets: budgets.map((b) => ({ category: b.category, limit: b.limit })),
+        categoryTotals,
+        recentTransactions,
+        budgets: budgetsWithSpent,
         healthScore: healthData ? healthData.score : null
       };
     }
