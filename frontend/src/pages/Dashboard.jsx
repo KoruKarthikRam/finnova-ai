@@ -279,25 +279,25 @@ function Dashboard() {
   const forecastNextMonth = forecastObj && typeof forecastObj.next_month === "string" ? forecastObj.next_month : null;
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 relative bg-dot-grid">
+    <div className="max-w-7xl mx-auto space-y-8 pb-16 relative">
       
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white tracking-tight">Financial Analytics Dashboard</h1>
-          <p className="mt-1 text-slate-400 text-xs font-medium">ZeBeyond high-tech transaction telemetry, ML anomaly detection, and forecasts.</p>
+          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Financial Analytics Dashboard</h1>
+          <p className="mt-1 text-slate-500 text-xs font-medium">Real-time transaction telemetry, ML anomaly detection, and cashflow forecasts.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
           <Link
             to="/reports"
-            className="rounded-xl glass-card hover:bg-slate-800/80 px-4 py-2 text-xs font-bold text-slate-300 hover:text-white border border-slate-700/80 transition shadow cursor-pointer flex items-center gap-1.5"
+            className="rounded-xl bg-white hover:bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 border border-slate-200 transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
             <span>📄</span> Statement Report
           </Link>
           <Link
             to="/transactions"
-            className="rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 px-5 py-2 text-xs font-black text-slate-950 shadow-md glow-cyan transition cursor-pointer"
+            className="rounded-xl bg-indigo-600 hover:bg-indigo-700 px-5 py-2 text-xs font-extrabold text-white shadow-xs transition cursor-pointer"
           >
             Manage Transactions 💸
           </Link>
@@ -305,17 +305,17 @@ function Dashboard() {
       </div>
 
       {safeTransactions.length === 0 ? (
-        <div className="rounded-3xl glass-card p-12 text-center border border-slate-800/80 space-y-4">
-          <div className="mx-auto w-16 h-16 bg-cyan-500/10 text-cyan-400 rounded-full flex items-center justify-center text-3xl">
+        <div className="rounded-3xl bg-white p-12 text-center border border-slate-200 shadow-xs space-y-4">
+          <div className="mx-auto w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center text-3xl font-bold">
             📊
           </div>
-          <h3 className="text-xl font-extrabold text-white">No Telemetry Records Found</h3>
-          <p className="text-slate-400 text-xs max-w-md mx-auto">
+          <h3 className="text-xl font-extrabold text-slate-900">No Telemetry Records Found</h3>
+          <p className="text-slate-500 text-xs max-w-md mx-auto">
             Log income & expenses to initialize ML anomaly scanning and charts.
           </p>
           <Link
             to="/transactions"
-            className="inline-block rounded-xl bg-cyan-500 text-slate-950 px-6 py-2.5 text-xs font-black shadow-md glow-cyan transition"
+            className="inline-block rounded-xl bg-indigo-600 text-white px-6 py-2.5 text-xs font-bold shadow-xs transition hover:bg-indigo-700"
           >
             + Add First Transaction
           </Link>
@@ -330,29 +330,29 @@ function Dashboard() {
           {/* Metrics Summary Grid */}
           <SectionErrorBoundary>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Income</span>
-                <p className="text-3xl font-black text-emerald-400">{formatCurrency(totalIncome)}</p>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-2">
+                <span className="text-xxs font-extrabold text-slate-500 uppercase tracking-widest">Total Income</span>
+                <p className="text-3xl font-black text-emerald-600">{formatCurrency(totalIncome)}</p>
               </div>
 
-              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Total Expenses</span>
-                <p className="text-3xl font-black text-rose-400">{formatCurrency(totalExpense)}</p>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-2">
+                <span className="text-xxs font-extrabold text-slate-500 uppercase tracking-widest">Total Expenses</span>
+                <p className="text-3xl font-black text-rose-600">{formatCurrency(totalExpense)}</p>
               </div>
 
-              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Net Surplus</span>
-                <p className={`text-3xl font-black ${balance >= 0 ? "text-gradient-cyan" : "text-amber-400"}`}>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-2">
+                <span className="text-xxs font-extrabold text-slate-500 uppercase tracking-widest">Net Surplus</span>
+                <p className={`text-3xl font-black ${balance >= 0 ? "text-indigo-600" : "text-amber-600"}`}>
                   {formatCurrency(balance)}
                 </p>
               </div>
 
-              <div className="glass-card glass-card-hover rounded-3xl p-6 border border-slate-800/80 space-y-2">
-                <span className="text-xxs font-extrabold text-slate-400 uppercase tracking-widest">Savings Rate</span>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-2">
+                <span className="text-xxs font-extrabold text-slate-500 uppercase tracking-widest">Savings Rate</span>
                 <div className="flex items-center gap-3">
-                  <p className="text-3xl font-black text-cyan-400">{savingsRate}%</p>
+                  <p className="text-3xl font-black text-indigo-600">{savingsRate}%</p>
                   <span className={`px-2.5 py-0.5 rounded-full text-xxs font-extrabold border ${
-                    savingsRate >= 30 ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" : "bg-amber-500/10 text-amber-400 border-amber-500/20"
+                    savingsRate >= 30 ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
                   }`}>
                     {savingsRate >= 30 ? "Optimal" : "Low Savings"}
                   </span>
@@ -364,25 +364,25 @@ function Dashboard() {
           {/* AI Health & Anomaly Row */}
           <SectionErrorBoundary>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="glass-card rounded-3xl p-6 border border-cyan-500/20 flex items-center justify-between shadow-lg">
+              <div className="bg-white rounded-3xl p-6 border border-indigo-100 shadow-xs flex items-center justify-between">
                 <div className="space-y-1">
-                  <h4 className="font-extrabold text-white text-sm">Financial Health Score</h4>
-                  <p className="text-xs text-slate-400">Grade: <span className="font-extrabold text-cyan-400">{healthData ? (healthData.grade || "N/A") : "Calculating..."}</span></p>
+                  <h4 className="font-extrabold text-slate-900 text-sm">Financial Health Score</h4>
+                  <p className="text-xs text-slate-500">Grade: <span className="font-extrabold text-indigo-600">{healthData ? (healthData.grade || "N/A") : "Calculating..."}</span></p>
                 </div>
-                <span className="text-4xl font-black text-gradient-cyan">
+                <span className="text-4xl font-black text-indigo-600">
                   {healthData && healthData.score !== undefined && healthData.score !== null ? `${healthData.score}/100` : "--/100"}
                 </span>
               </div>
 
-              <div className="glass-card rounded-3xl p-6 border border-amber-500/20 flex items-center justify-between shadow-lg">
+              <div className="bg-white rounded-3xl p-6 border border-amber-100 shadow-xs flex items-center justify-between">
                 <div className="space-y-1">
-                  <h4 className="font-extrabold text-white text-sm">ML Anomaly Detection</h4>
-                  <p className="text-xs text-slate-400">
+                  <h4 className="font-extrabold text-slate-900 text-sm">ML Anomaly Detection</h4>
+                  <p className="text-xs text-slate-500">
                     {safeAnomalies.length > 0 ? `Flagged ${safeAnomalies.length} transaction(s) deviating from behavior.` : "Zero transaction outliers flagged."}
                   </p>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${
-                  safeAnomalies.length > 0 ? "bg-rose-500/20 text-rose-300 border-rose-500/30" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/30"
+                  safeAnomalies.length > 0 ? "bg-rose-50 text-rose-700 border-rose-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
                 }`}>
                   {safeAnomalies.length > 0 ? `${safeAnomalies.length} Outliers` : "Active Telemetry"}
                 </span>
@@ -392,19 +392,19 @@ function Dashboard() {
 
           {/* Interactive What-If Scenario Lab */}
           <SectionErrorBoundary>
-            <div className="glass-card rounded-3xl p-6 sm:p-8 border border-indigo-500/30 shadow-xl space-y-6 relative overflow-hidden">
-              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-800/80 pb-4">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6 relative overflow-hidden">
+              <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-4">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-xl">🔮</span>
-                    <h3 className="text-base font-extrabold text-white tracking-tight">Interactive What-If Scenario Lab</h3>
+                    <h3 className="text-base font-extrabold text-slate-900 tracking-tight">Interactive What-If Scenario Lab</h3>
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5 font-medium">
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">
                     Simulate how lifestyle adjustments & SIP increases instantly boost your Financial Health Score & 1-Year Wealth.
                   </p>
                 </div>
 
-                <span className="text-xxs font-extrabold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1 rounded-full shrink-0">
+                <span className="text-xxs font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full shrink-0">
                   Live Predictive Engine
                 </span>
               </div>
@@ -413,9 +413,9 @@ function Dashboard() {
                 {/* Controls */}
                 <div className="space-y-5 lg:col-span-1">
                   <div>
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-1.5">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-700 mb-1.5">
                       <span>Cut Non-Essential Spending:</span>
-                      <span className="text-cyan-400 font-extrabold">{wantsCutPercent}%</span>
+                      <span className="text-indigo-600 font-extrabold">{wantsCutPercent}%</span>
                     </div>
                     <input
                       type="range"
@@ -424,15 +424,15 @@ function Dashboard() {
                       step="5"
                       value={wantsCutPercent}
                       onChange={(e) => setWantsCutPercent(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600"
                     />
-                    <p className="text-xxs text-slate-500 mt-1">Saves {formatCurrency(monthlyWantsSavings)}/mo from non-essentials</p>
+                    <p className="text-xxs text-slate-400 mt-1">Saves {formatCurrency(monthlyWantsSavings)}/mo from non-essentials</p>
                   </div>
 
                   <div>
-                    <div className="flex justify-between items-center text-xs font-bold text-slate-300 mb-1.5">
+                    <div className="flex justify-between items-center text-xs font-bold text-slate-700 mb-1.5">
                       <span>Add Extra Monthly SIP:</span>
-                      <span className="text-emerald-400 font-extrabold">{formatCurrency(extraSipMonthly)}</span>
+                      <span className="text-emerald-600 font-extrabold">{formatCurrency(extraSipMonthly)}</span>
                     </div>
                     <input
                       type="range"
@@ -441,30 +441,30 @@ function Dashboard() {
                       step="1000"
                       value={extraSipMonthly}
                       onChange={(e) => setExtraSipMonthly(Number(e.target.value))}
-                      className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+                      className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-600"
                     />
-                    <p className="text-xxs text-slate-500 mt-1">Routes surplus directly into compounding index funds</p>
+                    <p className="text-xxs text-slate-400 mt-1">Routes surplus directly into compounding index funds</p>
                   </div>
                 </div>
 
                 {/* Simulated Results */}
                 <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-cyan-500/30 space-y-1">
-                    <span className="text-xxs font-extrabold text-cyan-400 uppercase tracking-wider">Simulated Health Score</span>
-                    <p className="text-2xl font-black text-cyan-300">{simulatedScore}/100</p>
-                    <p className="text-xxs text-slate-400 font-semibold">{simulatedGrade}</p>
+                  <div className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100 space-y-1">
+                    <span className="text-xxs font-extrabold text-indigo-600 uppercase tracking-wider">Simulated Health Score</span>
+                    <p className="text-2xl font-black text-indigo-900">{simulatedScore}/100</p>
+                    <p className="text-xxs text-slate-600 font-semibold">{simulatedGrade}</p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-emerald-500/30 space-y-1">
-                    <span className="text-xxs font-extrabold text-emerald-400 uppercase tracking-wider">Monthly Extra Surplus</span>
-                    <p className="text-2xl font-black text-emerald-300">+{formatCurrency(monthlyWantsSavings)}</p>
-                    <p className="text-xxs text-slate-400 font-semibold">Saved from lifestyle wants</p>
+                  <div className="p-4 rounded-2xl bg-emerald-50/40 border border-emerald-100 space-y-1">
+                    <span className="text-xxs font-extrabold text-emerald-600 uppercase tracking-wider">Monthly Extra Surplus</span>
+                    <p className="text-2xl font-black text-emerald-700">+{formatCurrency(monthlyWantsSavings)}</p>
+                    <p className="text-xxs text-slate-600 font-semibold">Saved from lifestyle wants</p>
                   </div>
 
-                  <div className="p-4 rounded-2xl bg-gradient-to-tr from-indigo-900 to-slate-900 border border-indigo-500/40 space-y-1">
-                    <span className="text-xxs font-extrabold text-indigo-300 uppercase tracking-wider">1-Year Wealth Addition</span>
+                  <div className="p-4 rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 text-white space-y-1">
+                    <span className="text-xxs font-extrabold text-indigo-100 uppercase tracking-wider">1-Year Wealth Addition</span>
                     <p className="text-2xl font-black text-white">+{formatCurrency(simulatedAnnualWealthAddition)}</p>
-                    <p className="text-xxs text-indigo-200 font-semibold">Added to annual savings pool</p>
+                    <p className="text-xxs text-indigo-100 font-semibold">Added to annual savings pool</p>
                   </div>
                 </div>
               </div>
@@ -473,31 +473,31 @@ function Dashboard() {
 
           {/* AI Insights */}
           <SectionErrorBoundary>
-            <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4">
-              <div className="flex justify-between items-center border-b border-slate-800/60 pb-3">
+            <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4">
+              <div className="flex justify-between items-center border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-xl">🧠</span>
-                  <h4 className="font-extrabold text-white text-sm">Gemini AI Advisor Insights</h4>
+                  <h4 className="font-extrabold text-slate-900 text-sm">Gemini AI Advisor Insights</h4>
                 </div>
-                <span className="flex items-center gap-1.5 text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
-                  <span className="h-1.5 w-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
-                  Gemini 3.6 Flash Active
+                <span className="flex items-center gap-1.5 text-xxs font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
+                  <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                  AI Advisor Active
                 </span>
               </div>
 
               {insightsLoading ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 animate-pulse">
-                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                    <div className="h-3 bg-slate-800 rounded w-3/4"></div>
-                    <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-150 space-y-2">
+                    <div className="h-3 bg-slate-200 rounded w-3/4"></div>
+                    <div className="h-3 bg-slate-200/60 rounded w-1/2"></div>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                    <div className="h-3 bg-slate-800 rounded w-5/6"></div>
-                    <div className="h-3 bg-slate-800/60 rounded w-2/3"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-150 space-y-2">
+                    <div className="h-3 bg-slate-200 rounded w-5/6"></div>
+                    <div className="h-3 bg-slate-200/60 rounded w-2/3"></div>
                   </div>
-                  <div className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 space-y-2">
-                    <div className="h-3 bg-slate-800 rounded w-4/5"></div>
-                    <div className="h-3 bg-slate-800/60 rounded w-1/2"></div>
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-150 space-y-2">
+                    <div className="h-3 bg-slate-200 rounded w-4/5"></div>
+                    <div className="h-3 bg-slate-200/60 rounded w-1/2"></div>
                   </div>
                 </div>
               ) : safeInsights.length === 0 ? (
@@ -512,7 +512,7 @@ function Dashboard() {
                       : String(insight || "");
 
                     return (
-                      <div key={idx} className="p-4 rounded-2xl bg-[#0b0f17] border border-slate-800 text-xs text-slate-300 font-medium leading-relaxed">
+                      <div key={idx} className="p-4 rounded-2xl bg-indigo-50/40 border border-indigo-100 text-xs text-slate-700 font-medium leading-relaxed">
                         💡 {displayText}
                       </div>
                     );
@@ -526,11 +526,11 @@ function Dashboard() {
           <SectionErrorBoundary>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               
-              <div className="glass-card rounded-3xl p-6 border border-slate-800/80 lg:col-span-2 space-y-4">
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs lg:col-span-2 space-y-4">
                 <div className="flex justify-between items-center">
-                  <h3 className="text-sm font-extrabold text-white">Monthly Cashflow Telemetry</h3>
+                  <h3 className="text-sm font-extrabold text-slate-900">Monthly Cashflow Telemetry</h3>
                   {predictedForecastAmt > 0 && (
-                    <span className="text-xxs font-extrabold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 px-3 py-1 rounded-full">
+                    <span className="text-xxs font-extrabold text-indigo-600 bg-indigo-50 border border-indigo-100 px-3 py-1 rounded-full">
                       🔮 Next Est ({forecastNextMonth || "Next Month"}): {formatCurrency(predictedForecastAmt)}
                     </span>
                   )}
@@ -546,18 +546,18 @@ function Dashboard() {
                       <BarChart data={combinedMonthlyData}>
                         <XAxis dataKey="month" stroke="#64748b" fontSize={11} tickLine={false} />
                         <YAxis stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
-                        <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
+                        <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", borderRadius: "12px", color: "#0f172a" }} />
                         <Legend />
                         <Bar dataKey="income" name="Income" fill="#10b981" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="expense" name="Expenses" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="expense" name="Expenses" fill="#6366f1" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 )}
               </div>
 
-              <div className="glass-card rounded-3xl p-6 border border-slate-800/80 space-y-4 flex flex-col justify-between">
-                <h3 className="text-sm font-extrabold text-white">Category Allocation</h3>
+              <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs space-y-4 flex flex-col justify-between">
+                <h3 className="text-sm font-extrabold text-slate-900">Category Allocation</h3>
                 {categoryData.length === 0 ? (
                   <div className="h-56 flex flex-col items-center justify-center text-center p-4">
                     <span className="text-2xl mb-1">🍰</span>
@@ -573,11 +573,11 @@ function Dashboard() {
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
-                          <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#0b0f17", borderColor: "#334155", borderRadius: "12px", color: "#fff" }} />
+                          <Tooltip formatter={(val) => formatCurrency(val)} contentStyle={{ backgroundColor: "#ffffff", borderColor: "#cbd5e1", borderRadius: "12px", color: "#0f172a" }} />
                         </PieChart>
                       </ResponsiveContainer>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-xxs font-bold text-slate-400">
+                    <div className="grid grid-cols-2 gap-2 text-xxs font-bold text-slate-500">
                       {categoryData.map((item, idx) => (
                         <div key={item.name} className="flex items-center gap-1.5 truncate">
                           <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
