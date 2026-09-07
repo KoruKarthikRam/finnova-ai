@@ -207,7 +207,7 @@ function Assistant() {
 
     // Code blocks (```lang ... ```)
     html = html.replace(/```(?:[a-zA-Z]*)\n([\s\S]*?)```/g, (_, code) => {
-      return `<pre class="bg-slate-900 text-slate-100 p-3 rounded-xl text-xs font-mono my-3 overflow-x-auto"><code>${code.trim()}</code></pre>`;
+      return `<pre class="bg-slate-100 border border-slate-200 text-slate-800 p-3 rounded-xl text-xs font-mono my-3 overflow-x-auto"><code>${code.trim()}</code></pre>`;
     });
 
     // Horizontal rules (--- or ***)

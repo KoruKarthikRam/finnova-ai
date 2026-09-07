@@ -381,29 +381,29 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
     <div className="max-w-7xl mx-auto space-y-10 pb-16">
       
       {/* Header Banner */}
-      <div className="relative rounded-3xl bg-gradient-to-r from-indigo-900 via-violet-900 to-slate-900 p-8 sm:p-10 text-white overflow-hidden shadow-xl">
-        <div className="absolute right-0 top-0 -mr-16 -mt-16 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
+      <div className="relative rounded-3xl bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 p-8 sm:p-10 text-white overflow-hidden shadow-md">
+        <div className="absolute right-0 top-0 -mr-16 -mt-16 w-96 h-96 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
         
         <div className="relative z-10 max-w-3xl space-y-4">
-          <span className="inline-flex items-center gap-2 rounded-full bg-indigo-500/20 px-3.5 py-1 text-xs font-semibold text-indigo-200 border border-indigo-400/30">
+          <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3.5 py-1 text-xs font-semibold text-white border border-white/20">
             <span>📚</span> FinNova Academy
           </span>
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight leading-tight">
             Financial Literacy & Masterclass Hub
           </h1>
-          <p className="text-slate-300 text-sm sm:text-base leading-relaxed">
+          <p className="text-indigo-100 text-sm sm:text-base leading-relaxed">
             Master budgeting, tax optimization, mutual funds, loans, and wealth compounding with beginner-friendly guides tailored to Indian financial laws.
           </p>
 
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 pt-4">
             <div className="flex-1 max-w-md w-full">
               <div className="flex justify-between items-center text-xs font-bold mb-1.5">
-                <span className="text-indigo-200">Your Financial Literacy Progress</span>
-                <span className="text-emerald-400">{completedLessons.length} / {lessons.length} Modules ({completionPercentage}%)</span>
+                <span className="text-indigo-100">Your Financial Literacy Progress</span>
+                <span className="text-emerald-300">{completedLessons.length} / {lessons.length} Modules ({completionPercentage}%)</span>
               </div>
-              <div className="h-3 w-full bg-slate-800/80 rounded-full overflow-hidden border border-slate-700">
+              <div className="h-3 w-full bg-indigo-950/40 rounded-full overflow-hidden border border-indigo-400/30">
                 <div
-                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-400 transition-all duration-500 rounded-full"
+                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-500 rounded-full"
                   style={{ width: `${completionPercentage}%` }}
                 ></div>
               </div>
@@ -743,7 +743,7 @@ Once your retirement portfolio reaches **25 times your annual living expenses**,
           <div className="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-100 my-8">
             
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-indigo-900 to-slate-900 p-6 sm:p-8 text-white relative">
+            <div className="bg-gradient-to-r from-indigo-600 via-indigo-700 to-violet-700 p-6 sm:p-8 text-white relative">
               <button
                 onClick={() => setActiveLessonModal(null)}
                 className="absolute right-5 top-5 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition cursor-pointer text-sm font-bold"

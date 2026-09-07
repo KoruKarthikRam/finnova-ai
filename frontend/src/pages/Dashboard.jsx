@@ -248,24 +248,24 @@ function Dashboard() {
 
   if (error) {
     return (
-      <div className="max-w-md mx-auto mt-16 rounded-3xl glass-card p-8 border border-rose-500/20 text-center space-y-4 shadow-xl">
-        <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-400 flex items-center justify-center mx-auto text-xl">
+      <div className="max-w-md mx-auto mt-16 rounded-3xl bg-white p-8 border border-rose-200 text-center space-y-4 shadow-md">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center mx-auto text-xl font-bold">
           ⚠️
         </div>
-        <h3 className="text-base font-extrabold text-white">Dashboard Unavailable</h3>
-        <p className="text-xs font-semibold text-rose-300/90 leading-relaxed">
+        <h3 className="text-base font-extrabold text-slate-900">Dashboard Unavailable</h3>
+        <p className="text-xs font-semibold text-rose-600 leading-relaxed">
           {error}
         </p>
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
             onClick={() => fetchDashboardData()}
-            className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-black transition cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition cursor-pointer"
           >
             🔄 Retry Loading
           </button>
           <Link
             to="/login"
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition"
+            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition"
           >
             Re-login
           </Link>
