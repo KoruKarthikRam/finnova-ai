@@ -1,5 +1,5 @@
 import { Component } from "react";
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -68,11 +68,8 @@ const ProtectedRoute = ({ children }) => {
 };
 
 function AppContent() {
-  const location = useLocation();
-  const isMainPage = location.pathname === "/";
-
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isMainPage ? "bg-[#05070c] text-slate-100" : "bg-slate-50 text-slate-900"}`}>
+    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 transition-colors duration-200">
       <Navbar />
 
       <main className="flex-1 pb-16">

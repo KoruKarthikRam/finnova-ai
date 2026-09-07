@@ -40,29 +40,19 @@ function Navbar() {
     { path: "/assistant", label: "AI Assistant", icon: "🤖" },
   ];
 
-  const isMainPage = location.pathname === "/";
-
   return (
-    <nav className={`print:hidden sticky top-0 z-50 px-6 py-3.5 transition-all ${
-      isMainPage
-        ? "glass-nav text-white"
-        : "bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs text-slate-800"
-    }`}>
+    <nav className="print:hidden sticky top-0 z-50 px-6 py-3.5 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs text-slate-800 transition-all">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         
         {/* Brand Logo */}
         <Link to="/" className="flex items-center gap-2.5 group">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-violet-600 p-0.5 shadow-xs group-hover:scale-105 transition duration-200">
-            <div className={`w-full h-full rounded-[10px] flex items-center justify-center text-sm font-bold ${
-              isMainPage ? "bg-[#05070c] text-cyan-400" : "bg-white text-indigo-600"
-            }`}>
+            <div className="w-full h-full rounded-[10px] bg-white text-indigo-600 flex items-center justify-center text-sm font-bold">
               ⚡
             </div>
           </div>
-          <span className={`text-xl font-heading font-extrabold tracking-tight transition ${
-            isMainPage ? "text-white group-hover:text-cyan-300" : "text-slate-900 group-hover:text-indigo-600"
-          }`}>
-            FinNova <span className={isMainPage ? "text-gradient-cyan" : "text-indigo-600"}>AI</span>
+          <span className="text-xl font-heading font-extrabold tracking-tight text-slate-900 group-hover:text-indigo-600 transition">
+            FinNova <span className="text-indigo-600">AI</span>
           </span>
         </Link>
 
@@ -70,11 +60,7 @@ function Navbar() {
         <div className="flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <div className={`hidden lg:flex items-center gap-1 p-1 rounded-2xl border ${
-                isMainPage
-                  ? "glass-panel-luxury border-white/10"
-                  : "bg-slate-100/80 border-slate-200"
-              }`}>
+              <div className="hidden lg:flex items-center gap-1 p-1 rounded-2xl bg-slate-100/80 border border-slate-200">
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.path;
                   return (
@@ -84,8 +70,6 @@ function Navbar() {
                       className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-1.5 ${
                         isActive
                           ? "bg-indigo-600 text-white shadow-xs"
-                          : isMainPage
-                          ? "text-slate-300 hover:text-white hover:bg-slate-800/50"
                           : "text-slate-600 hover:text-slate-900 hover:bg-white"
                       }`}
                     >
@@ -96,28 +80,20 @@ function Navbar() {
                 })}
               </div>
 
-              <div className={`h-6 w-px hidden lg:block ${isMainPage ? "bg-white/10" : "bg-slate-200"}`}></div>
+              <div className="h-6 w-px hidden lg:block bg-slate-200"></div>
 
               {/* User Pill & Logout */}
               <div className="flex items-center gap-3">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-semibold ${
-                  isMainPage
-                    ? "glass-panel-luxury border-white/10 text-slate-300"
-                    : "bg-slate-100 border-slate-200 text-slate-700"
-                }`}>
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
                   <div className="w-6 h-6 rounded-full bg-indigo-500/20 text-indigo-600 border border-indigo-500/30 flex items-center justify-center font-bold text-xxs">
                     {userName ? userName.charAt(0).toUpperCase() : "U"}
                   </div>
-                  <span className={`hidden sm:inline font-bold ${isMainPage ? "text-slate-200" : "text-slate-800"}`}>{userName || "User"}</span>
+                  <span className="hidden sm:inline font-bold text-slate-800">{userName || "User"}</span>
                 </div>
 
                 <button
                   onClick={handleLogout}
-                  className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition duration-200 cursor-pointer border ${
-                    isMainPage
-                      ? "glass-panel-luxury hover:bg-rose-500/20 text-slate-300 hover:text-rose-300 border-white/10 hover:border-rose-500/30"
-                      : "bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border-slate-200 hover:border-rose-200"
-                  }`}
+                  className="rounded-xl px-3.5 py-1.5 text-xs font-bold transition duration-200 cursor-pointer bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-600 border border-slate-200 hover:border-rose-200"
                 >
                   Logout
                 </button>
@@ -127,9 +103,7 @@ function Navbar() {
             <div className="flex items-center gap-3">
               <Link
                 to="/login"
-                className={`px-4 py-2 text-xs font-bold transition ${
-                  isMainPage ? "text-slate-300 hover:text-white" : "text-slate-600 hover:text-slate-900"
-                }`}
+                className="px-4 py-2 text-xs font-bold text-slate-600 hover:text-slate-900 transition"
               >
                 Sign In
               </Link>
