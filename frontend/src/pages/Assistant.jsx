@@ -205,34 +205,114 @@ function Assistant() {
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;");
 
-    // Headings (### heading)
+    // Code blocks (```lang ... ```)
+    html = html.replace(/```(?:[a-zA-Z]*)\n([\s\S]*?)```/g, (_, code) => {
+      return `<pre class="bg-slate-900 text-slate-100 p-3 rounded-xl text-xs font-mono my-3 overflow-x-auto"><code>${code.trim()}</code></pre>`;
+    });
+
+    // Horizontal rules (--- or ***)
+    html = html.replace(/^---$/gm, '<hr class="my-4 border-slate-200" />');
+    html = html.replace(/^\*\*\*$/gm, '<hr class="my-4 border-slate-200" />');
+
+    // Headings
+    html = html.replace(
+      /^#### (.*?)$/gm,
+      '<h5 class="text-sm font-bold text-slate-800 mt-3 mb-1">$1</h5>'
+    );
     html = html.replace(
       /^### (.*?)$/gm,
       '<h4 class="text-base font-bold text-slate-900 mt-4 mb-1.5">$1</h4>'
     );
     html = html.replace(
       /^## (.*?)$/gm,
-      '<h3 class="text-lg font-bold text-slate-900 mt-5 mb-2">$1</h3>'
+      '<h3 class="text-lg font-extrabold text-slate-900 mt-5 mb-2 border-b border-slate-100 pb-1">$1</h3>'
     );
     html = html.replace(
       /^# (.*?)$/gm,
-      '<h2 class="text-xl font-bold text-slate-900 mt-6 mb-3">$1</h2>'
+      '<h2 class="text-xl font-extrabold text-slate-900 mt-6 mb-3 border-b border-slate-200 pb-1.5">$1</h2>'
     );
 
-    // Bold text (**text**) & Inline code (`code`)
+    // Blockquotes (> text or &gt; text)
+    html = html.replace(
+      /^(?:&gt;|>)\s?(.*?)$/gm,
+      '<blockquote class="border-l-4 border-indigo-500 bg-indigo-50/60 px-3 py-2 my-2 text-indigo-950 font-medium rounded-r-lg text-xs leading-relaxed">$1</blockquote>'
+    );
+
+    // Bold text (**text**) & Italic text (*text*) & Inline code (`code`)
     html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-extrabold text-slate-900">$1</strong>');
+    html = html.replace(/\*(.*?)\*/g, '<em class="italic text-slate-800">$1</em>');
     html = html.replace(/`([^`]+)`/g, '<code class="bg-slate-200/60 text-indigo-700 px-1.5 py-0.5 rounded text-xs font-mono">$1</code>');
 
-    // Parse lists (unordered and ordered)
+    // Tables: Parse table blocks | col1 | col2 |
     const lines = html.split("\n");
+    let inTable = false;
+    let tableHtml = "";
+    const processedLines = [];
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim();
+      const isTableRow = /^\|.*\|$/.test(line);
+
+      if (isTableRow) {
+        // Skip separator line |---|---|
+        if (/^\|(?:\s*:?-+:?\s*\|)+$/.test(line)) {
+          continue;
+        }
+
+        const cells = line
+          .split("|")
+          .slice(1, -1)
+          .map((c) => c.trim());
+
+        if (!inTable) {
+          inTable = true;
+          tableHtml = '<div class="overflow-x-auto my-3"><table class="w-full text-xs text-left border-collapse border border-slate-200 rounded-xl overflow-hidden shadow-xxs"><thead class="bg-slate-100/80 text-slate-800 font-bold border-b border-slate-200"><tr>';
+          cells.forEach((cell) => {
+            tableHtml += `<th class="px-3 py-2 border-r border-slate-200 last:border-r-0">${cell}</th>`;
+          });
+          tableHtml += "</tr></thead><tbody class=\"divide-y divide-slate-100 bg-white\">";
+        } else {
+          tableHtml += '<tr class="hover:bg-slate-50/60 transition">';
+          cells.forEach((cell) => {
+            tableHtml += `<td class="px-3 py-2 border-r border-slate-100 last:border-r-0 text-slate-700">${cell}</td>`;
+          });
+          tableHtml += "</tr>";
+        }
+      } else {
+        if (inTable) {
+          inTable = false;
+          tableHtml += "</tbody></table></div>";
+          processedLines.push(tableHtml);
+          tableHtml = "";
+        }
+
+        // Parse lists (unordered and ordered)
+        const isBullet = /^(?:[-*•])\s+(.*)/.exec(line);
+        const isNum = /^(\d+)\.\s+(.*)/.exec(line);
+
+        if (isBullet) {
+          processedLines.push(`__BULLET__${isBullet[1]}`);
+        } else if (isNum) {
+          processedLines.push(`__NUM__${isNum[2]}`);
+        } else {
+          processedLines.push(line);
+        }
+      }
+    }
+
+    if (inTable) {
+      tableHtml += "</tbody></table></div>";
+      processedLines.push(tableHtml);
+    }
+
+    // Now group BULLET and NUM items into <ul> and <ol>
+    let finalLines = [];
     let inUnordered = false;
     let inOrdered = false;
-    const processedLines = lines.map((line) => {
-      const trimmed = line.trim();
-      const isBullet = /^(?:[-*•])\s+(.*)/.exec(trimmed);
-      const isNum = /^(\d+)\.\s+(.*)/.exec(trimmed);
 
-      if (isBullet) {
+    processedLines.forEach((line) => {
+      if (typeof line === "string" && line.startsWith("__BULLET__")) {
+        const content = line.replace("__BULLET__", "");
         let prefix = "";
         if (inOrdered) {
           inOrdered = false;
@@ -240,10 +320,11 @@ function Assistant() {
         }
         if (!inUnordered) {
           inUnordered = true;
-          prefix += '<ul class="list-disc pl-5 my-2 space-y-1 text-slate-700">';
+          prefix += '<ul class="list-disc pl-5 my-2 space-y-1.5 text-slate-700">';
         }
-        return `${prefix}<li>${isBullet[1]}</li>`;
-      } else if (isNum) {
+        finalLines.push(`${prefix}<li>${content}</li>`);
+      } else if (typeof line === "string" && line.startsWith("__NUM__")) {
+        const content = line.replace("__NUM__", "");
         let prefix = "";
         if (inUnordered) {
           inUnordered = false;
@@ -251,9 +332,9 @@ function Assistant() {
         }
         if (!inOrdered) {
           inOrdered = true;
-          prefix += '<ol class="list-decimal pl-5 my-2 space-y-1 text-slate-700">';
+          prefix += '<ol class="list-decimal pl-5 my-2 space-y-1.5 text-slate-700">';
         }
-        return `${prefix}<li>${isNum[2]}</li>`;
+        finalLines.push(`${prefix}<li>${content}</li>`);
       } else {
         let prefix = "";
         if (inUnordered) {
@@ -264,19 +345,19 @@ function Assistant() {
           inOrdered = false;
           prefix += "</ol>";
         }
-        return prefix + line;
+        finalLines.push(prefix + line);
       }
     });
 
-    if (inUnordered) processedLines.push("</ul>");
-    if (inOrdered) processedLines.push("</ol>");
+    if (inUnordered) finalLines.push("</ul>");
+    if (inOrdered) finalLines.push("</ol>");
 
-    html = processedLines.join("\n");
+    html = finalLines.join("\n");
 
     // Replace double newlines with paragraph tags
     html = html.replace(/\n\n/g, '</p><p class="mt-3">');
 
-    // Replace single newlines with break lines
+    // Replace remaining single newlines with break lines
     html = html.replace(/\n/g, "<br />");
 
     return `<div class="leading-relaxed text-slate-700 text-sm space-y-2">${html}</div>`;
