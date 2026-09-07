@@ -3,6 +3,8 @@ const transactionService = require("../services/transactionService");
 const { generateChatResponse, generateInsights } = require("../services/geminiService");
 const budgetService = require("../services/budgetService");
 const healthService = require("../services/healthService");
+const goalService = require("../services/goalService");
+const subscriptionService = require("../services/subscriptionService");
 
 const testAiServiceConnection = async (req, res) => {
   const result = await checkAiServiceHealth();
@@ -158,10 +160,12 @@ const chatWithAssistant = async (req, res) => {
     const userId = req.user.id;
 
     // Execute context queries & RAG search in PARALLEL for maximum speed
-    const [txResult, budgetResult, healthResult, ragResult] = await Promise.allSettled([
+    const [txResult, budgetResult, healthResult, goalResult, subResult, ragResult] = await Promise.allSettled([
       useContext ? transactionService.getAllTransactions(userId) : Promise.resolve([]),
       useContext ? budgetService.getBudgets(userId, currentMonth, currentYear) : Promise.resolve([]),
       useContext ? healthService.calculateHealthScore(userId) : Promise.resolve(null),
+      useContext ? goalService.getAllGoals(userId) : Promise.resolve([]),
+      useContext ? subscriptionService.getUserSubscriptions(userId) : Promise.resolve(null),
       searchKnowledge(message)
     ]);
 
@@ -170,6 +174,8 @@ const chatWithAssistant = async (req, res) => {
       const transactions = txResult.status === "fulfilled" && Array.isArray(txResult.value) ? txResult.value : [];
       const budgets = budgetResult.status === "fulfilled" && Array.isArray(budgetResult.value) ? budgetResult.value : [];
       const healthData = healthResult.status === "fulfilled" ? healthResult.value : null;
+      const goals = goalResult.status === "fulfilled" && Array.isArray(goalResult.value) ? goalResult.value : [];
+      const subData = subResult.status === "fulfilled" && subResult.value?.subscriptions ? subResult.value.subscriptions : [];
 
       const currentMonthTransactions = transactions.filter((t) => {
         const d = new Date(t.date);
@@ -194,7 +200,7 @@ const chatWithAssistant = async (req, res) => {
 
       const recentTransactions = [...transactions]
         .sort((a, b) => new Date(b.date) - new Date(a.date))
-        .slice(0, 8)
+        .slice(0, 15)
         .map((t) => ({
           date: t.date ? new Date(t.date).toISOString() : "",
           amount: t.amount || 0,
@@ -209,6 +215,21 @@ const chatWithAssistant = async (req, res) => {
         spent: categoryTotals[b.category] || 0
       }));
 
+      const formattedGoals = goals.map((g) => ({
+        title: g.title || g.name || "Goal",
+        targetAmount: g.targetAmount || 0,
+        currentAmount: g.currentAmount || 0,
+        category: g.category || "General",
+        status: g.status || "active"
+      }));
+
+      const formattedSubs = subData.map((s) => ({
+        title: s.title || s.name || "Subscription",
+        amount: s.amount || 0,
+        category: s.category || "Others",
+        frequency: s.frequency || "Monthly"
+      }));
+
       userContext = {
         balance: totalIncome - totalExpenses,
         totalIncome,
@@ -216,6 +237,8 @@ const chatWithAssistant = async (req, res) => {
         categoryTotals,
         recentTransactions,
         budgets: budgetsWithSpent,
+        goals: formattedGoals,
+        subscriptions: formattedSubs,
         healthScore: healthData ? healthData.score : null
       };
     }

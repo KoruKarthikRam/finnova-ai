@@ -6,50 +6,92 @@
 const generateSmartFallbackResponse = (message, userContext = null) => {
   const query = (message || "").toLowerCase();
 
-  // 1. Personalized Context Analysis (if query asks about user spending/budget/health or context is enabled)
-  if (userContext && (query.includes("spend") || query.includes("budget") || query.includes("health") || query.includes("balance") || query.includes("transaction") || query.includes("my") || query.includes("score"))) {
+  // Helper to build rich user data citations block
+  const buildUserDataCitationsBlock = (ctx) => {
+    if (!ctx) return "";
+
+    const balance = ctx.balance || 0;
+    const totalIncome = ctx.totalIncome || 0;
+    const totalExpenses = ctx.totalExpenses || 0;
+    const healthScore = ctx.healthScore !== null ? ctx.healthScore : "N/A";
+
+    const categoryBreakdown = ctx.categoryTotals && Object.keys(ctx.categoryTotals).length > 0
+      ? Object.entries(ctx.categoryTotals).map(([cat, val]) => `- **${cat}**: ₹${val.toLocaleString('en-IN')}`).join("\n")
+      : "- No categorized expense transactions logged yet this month.";
+
+    const budgetStatus = Array.isArray(ctx.budgets) && ctx.budgets.length > 0
+      ? ctx.budgets.map(b => `- **${b.category}**: Limit ₹${b.limit.toLocaleString('en-IN')} (Spent: ₹${(b.spent || 0).toLocaleString('en-IN')}) ${b.spent > b.limit ? "⚠️ **OVER BUDGET**" : ""}`).join("\n")
+      : "- No active category budgets configured for this month.";
+
+    const goalStatus = Array.isArray(ctx.goals) && ctx.goals.length > 0
+      ? ctx.goals.map(g => `- **${g.title}**: ₹${(g.currentAmount || 0).toLocaleString('en-IN')} / ₹${(g.targetAmount || 0).toLocaleString('en-IN')} (${g.targetAmount > 0 ? Math.round(((g.currentAmount || 0) / g.targetAmount) * 100) : 0}% achieved)`).join("\n")
+      : "- No active savings goals logged.";
+
+    const subStatus = Array.isArray(ctx.subscriptions) && ctx.subscriptions.length > 0
+      ? ctx.subscriptions.map(s => `- **${s.title}**: ₹${(s.amount || 0).toLocaleString('en-IN')}/${s.frequency || 'Monthly'} (${s.category})`).join("\n")
+      : "- No recurring subscriptions detected.";
+
+    const recentTx = Array.isArray(ctx.recentTransactions) && ctx.recentTransactions.length > 0
+      ? ctx.recentTransactions.slice(0, 5).map(t => `- **${t.date ? t.date.split("T")[0] : "Recent"}**: ${t.description || t.category} — ₹${(t.amount || 0).toLocaleString('en-IN')} (${t.type})`).join("\n")
+      : "- No recent transactions logged.";
+
+    const savingsRate = totalIncome > 0 ? Math.max(0, Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)) : 0;
+
+    return `\n\n---
+### 👤 Citing Your Personal Financial Data & Real Examples
+
+Here are concrete examples cited directly from your live account records:
+
+#### 💵 Account Overview & Metrics
+- **Current Net Balance**: ₹${balance.toLocaleString('en-IN')}
+- **Total Income This Month**: ₹${totalIncome.toLocaleString('en-IN')}
+- **Total Expenses This Month**: ₹${totalExpenses.toLocaleString('en-IN')}
+- **Calculated Savings Rate**: **${savingsRate}%** (Benchmark: **≥ 30%**)
+- **Financial Health Score**: **${healthScore}/100**
+
+#### 🛍️ Your Monthly Category Spending
+${categoryBreakdown}
+
+#### 🎯 Active Budgets & Status
+${budgetStatus}
+
+#### 🎯 Active Savings Goals
+${goalStatus}
+
+#### 💳 Recurring Subscriptions
+${subStatus}
+
+#### 🧾 Recent Transaction Examples
+${recentTx}
+`;
+  };
+
+  const citationsBlock = buildUserDataCitationsBlock(userContext);
+
+  // 1. Personalized Context Analysis
+  if (userContext && (query.includes("spend") || query.includes("budget") || query.includes("health") || query.includes("balance") || query.includes("transaction") || query.includes("my") || query.includes("score") || query.includes("goal") || query.includes("subscription"))) {
     const balance = userContext.balance || 0;
     const totalIncome = userContext.totalIncome || 0;
     const totalExpenses = userContext.totalExpenses || 0;
     const healthScore = userContext.healthScore !== null ? userContext.healthScore : "N/A";
-
-    const categoryBreakdown = userContext.categoryTotals && Object.keys(userContext.categoryTotals).length > 0
-      ? Object.entries(userContext.categoryTotals).map(([cat, val]) => `- **${cat}**: ₹${val.toLocaleString('en-IN')}`).join("\n")
-      : "- No categorized expense transactions logged yet this month.";
-
-    const budgetStatus = Array.isArray(userContext.budgets) && userContext.budgets.length > 0
-      ? userContext.budgets.map(b => `- **${b.category}**: Limit ₹${b.limit.toLocaleString('en-IN')} (Spent: ₹${(b.spent || 0).toLocaleString('en-IN')})`).join("\n")
-      : "- No active category budgets configured for this month.";
-
     const savingsRate = totalIncome > 0 ? Math.max(0, Math.round(((totalIncome - totalExpenses) / totalIncome) * 100)) : 0;
 
-    return `## 📊 Comprehensive Personal Financial Analysis
+    return `## 📊 Comprehensive Analysis Grounded in Your Personal Data
 
-Here is a detailed breakdown of your live financial standing based on your logged transactions and budgets:
+Here is a detailed analysis citing your live financial transactions, category spending, budgets, and savings goals:
 
-### 💵 Income & Expense Summary
+### 💵 Live Summary
 - **Current Account Balance**: ₹${balance.toLocaleString('en-IN')}
 - **Total Monthly Income**: ₹${totalIncome.toLocaleString('en-IN')}
 - **Total Monthly Expenses**: ₹${totalExpenses.toLocaleString('en-IN')}
 - **Current Savings Rate**: **${savingsRate}%** (Target benchmark: **≥ 30%**)
 - **Financial Health Score**: **${healthScore}/100**
+${citationsBlock}
 
----
-
-### 🛍️ Monthly Category Spending Breakdown
-${categoryBreakdown}
-
----
-
-### 🎯 Active Category Budgets
-${budgetStatus}
-
----
-
-### 💡 Tailored Action Plan & Recommendations
-1. **Optimize Savings Rate**: ${savingsRate >= 30 ? "Outstanding job! You are meeting the 30% savings threshold. Direct surplus cash flow into equity SIPs." : "Your savings rate is below the recommended 30% target. Review non-essential spending (dining out, OTT, shopping) to boost surplus cash."}
-2. **Budget Tracking**: Ensure high-spending categories stay within set limits. If budgets are close to exceeding, set automated spending alerts.
-3. **Emergency Cushion**: Ensure you maintain 3 to 6 months of essential living expenses (approx. ₹${(totalExpenses * 3).toLocaleString('en-IN')} to ₹${(totalExpenses * 6).toLocaleString('en-IN')}) in a liquid high-yield savings account.`;
+### 💡 Personal Recommendations Citing Your Numbers
+1. **Savings Rate Strategy**: ${savingsRate >= 30 ? `Great job! Your savings rate of **${savingsRate}%** meets the 30% benchmark. Route excess cash into equity SIPs.` : `Your current savings rate is **${savingsRate}%**, which is below the recommended 30% target. Review your non-essential spending to increase surplus.`}
+2. **Category Budget Management**: Ensure high-spending categories remain strictly within your defined limits.
+3. **Emergency Reserve**: Aim to maintain 3 to 6 months of essential living expenses (approx. ₹${(totalExpenses * 3).toLocaleString('en-IN')} to ₹${(totalExpenses * 6).toLocaleString('en-IN')}) in liquid savings.`;
   }
 
   // 2. Topic: Budgeting / 50-30-20 Rule
@@ -257,11 +299,12 @@ const getModel = (modelName = "gemini-1.5-flash-latest") => {
     `3. STRUCTURED MARKDOWN: Format every response cleanly using markdown headers (## and ###), bullet points, numbered lists, bold text for key terms, blockquotes for important callouts, and markdown tables where comparing options (e.g., Old vs New Tax Regime, Equity vs Debt Mutual Funds, SIP vs Lump Sum).\n` +
     `4. STEP-BY-STEP ACTIONABLE PLAN: Conclude educational answers or financial advice with a clear, numbered "Step-by-Step Action Plan" that the user can immediately implement.\n` +
     `5. CONCRETE EXAMPLES & MATHEMATICAL BREAKDOWNS: When explaining concepts like SIP compounding, 50/30/20 rule, emergency funds, or tax savings, include practical numerical breakdowns (e.g., "If you invest ₹5,000/month at 12% p.a. for 10 years...").\n` +
-    `6. PERSONALIZED FINANCIAL CONTEXT ANALYSIS: Whenever user financial context (Account Balance, Monthly Income/Expenses, Financial Health Score, Category Spending, Budgets, Recent Transactions) is present in the prompt:\n` +
-    `   - Ground your analysis directly in their exact figures.\n` +
-    `   - Compare their actual spending ratios to financial benchmarks (e.g. 50/30/20 rule, 30% savings rate target).\n` +
-    `   - Highlight specific category budget risks or savings opportunities.\n` +
-    `   - Provide tailored advice based on their current Health Score.\n` +
+    `6. PERSONALIZED FINANCIAL CONTEXT ANALYSIS & DATA CITATION:\n` +
+    `   Whenever user financial context (Account Balance, Income, Expenses, Health Score, Category Spending, Budgets, Goals, Subscriptions, Recent Transactions) is present:\n` +
+    `   - YOU MUST EXPLICITLY GROUND YOUR RESPONSE IN THEIR EXACT DATA AND CITE SPECIFIC EXAMPLES FROM THEIR TRANSACTIONS/BUDGETS/GOALS/SUBSCRIPTIONS.\n` +
+    `   - Cite exact dates, descriptions, amounts, and category limits (e.g. "For example, in your recent transaction on [Date], you spent ₹[Amount] on [Description]...", or "Looking at your Food budget, you have spent ₹[Spent] out of ₹[Limit]...").\n` +
+    `   - Compare their actual spending ratios to financial benchmarks (50/30/20 rule, 30% savings rate target).\n` +
+    `   - Provide tailored advice connecting theoretical concepts directly to their personal numbers.\n` +
     `7. SCOPE & SAFETY: Cover personal finance, budgeting, tax planning (Old/New Regime, 80C/80D), emergency reserves, debt management (CIBIL, EMIs), mutual funds, SIPs, and retirement (EPF, NPS, PPF). Do NOT provide specific stock tips or definitive legal/tax filing guarantees. Encourage consulting certified financial planners or tax experts for official filings. Decline topics completely unrelated to finance or personal growth politely.`;
 
   const candidateModels = [modelName, "gemini-1.5-flash-latest", "gemini-1.5-flash", "gemini-1.5-pro-latest", "gemini-1.5-pro", "gemini-pro"];
@@ -365,28 +408,39 @@ const generateChatResponse = async (message, history = [], userContext = null, r
         ? Object.entries(userContext.categoryTotals).map(([cat, val]) => `${cat}: ₹${val}`).join(", ")
         : "No expense transactions logged yet";
 
+      const goalsStr = Array.isArray(userContext.goals) && userContext.goals.length > 0
+        ? userContext.goals.map(g => `${g.title}: ₹${g.currentAmount} / ₹${g.targetAmount} (${g.status})`).join(", ")
+        : "None";
+
+      const subsStr = Array.isArray(userContext.subscriptions) && userContext.subscriptions.length > 0
+        ? userContext.subscriptions.map(s => `${s.title}: ₹${s.amount}/${s.frequency} (${s.category})`).join(", ")
+        : "None";
+
       const recentTxStr = Array.isArray(userContext.recentTransactions) && userContext.recentTransactions.length > 0
-        ? userContext.recentTransactions.map(t => `- ${t.date.split("T")[0]}: ${t.description || t.category} (₹${t.amount}, ${t.type})`).join("\n")
+        ? userContext.recentTransactions.map(t => `- ${t.date ? t.date.split("T")[0] : ""}: ${t.description || t.category} (₹${t.amount}, ${t.type})`).join("\n")
         : "No recent transactions";
 
       finalPrompt += `[USER FINANCIAL CONTEXT]\n` +
-        `- Account Balance: ₹${userContext.balance || 0}\n` +
-        `- Total Income this month: ₹${userContext.totalIncome || 0}\n` +
-        `- Total Expenses this month: ₹${userContext.totalExpenses || 0}\n` +
+        `- Current Account Balance: ₹${userContext.balance || 0}\n` +
+        `- Total Monthly Income: ₹${userContext.totalIncome || 0}\n` +
+        `- Total Monthly Expenses: ₹${userContext.totalExpenses || 0}\n` +
         `- Financial Health Score: ${userContext.healthScore || "N/A"}/100\n` +
         `- Monthly Spending by Category: ${categoryTotalsStr}\n` +
-        `- Active Budgets: ${activeBudgetsStr}\n` +
-        `- Recent Transactions:\n${recentTxStr}\n` +
-        `[END OF CONTEXT]\n\n`;
+        `- Active Category Budgets: ${activeBudgetsStr}\n` +
+        `- Active Savings Goals: ${goalsStr}\n` +
+        `- Recurring Subscriptions: ${subsStr}\n` +
+        `- Recent User Transactions:\n${recentTxStr}\n` +
+        `[END OF USER CONTEXT]\n\n`;
     }
 
     const mandatoryDirective = 
       `\n\n[MANDATORY SYSTEM DIRECTIVE: Provide an exceptionally detailed, thorough, multi-paragraph, and highly comprehensive response. ` +
       `Break down the topic with: ` +
       `1) Foundational Principles & Core Concepts, ` +
-      `2) Detailed Mathematical Calculations & Real-World Examples in Indian Rupees (₹), ` +
-      `3) Comparison & Analysis (use Markdown Tables where applicable), ` +
-      `4) Step-by-Step Actionable Implementation Plan. ` +
+      `2) Explicit Data Citations & Concrete Examples from the User's Personal Account (citing their actual transactions, budget limits, goals, or subscriptions), ` +
+      `3) Detailed Mathematical Calculations & Real-World Examples in Indian Rupees (₹), ` +
+      `4) Comparison & Analysis (use Markdown Tables where applicable), ` +
+      `5) Step-by-Step Actionable Implementation Plan. ` +
       `Do NOT write brief, short, or summarized answers under any circumstances.]`;
 
     if (finalPrompt) {
