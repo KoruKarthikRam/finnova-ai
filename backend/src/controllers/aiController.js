@@ -177,6 +177,18 @@ const chatWithAssistant = async (req, res) => {
       const goals = goalResult.status === "fulfilled" && Array.isArray(goalResult.value) ? goalResult.value : [];
       const subData = subResult.status === "fulfilled" && subResult.value?.subscriptions ? subResult.value.subscriptions : [];
 
+      // Compute overall account balance across ALL transactions
+      const allIncome = transactions
+        .filter((t) => t.type === "income")
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      const allExpense = transactions
+        .filter((t) => t.type === "expense")
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      const actualAccountBalance = allIncome - allExpense;
+
+      // Compute current month's income and expenses
       const currentMonthTransactions = transactions.filter((t) => {
         const d = new Date(t.date);
         return d.getMonth() + 1 === currentMonth && d.getFullYear() === currentYear;
@@ -231,7 +243,7 @@ const chatWithAssistant = async (req, res) => {
       }));
 
       userContext = {
-        balance: totalIncome - totalExpenses,
+        balance: actualAccountBalance,
         totalIncome,
         totalExpenses,
         categoryTotals,

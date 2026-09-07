@@ -70,7 +70,18 @@ function Assistant() {
         healthScore = healthRes.value.data.data?.score;
       }
 
-      // Compute income/expenses & top categories
+      // Compute overall account balance across ALL transactions
+      const allIncome = transactions
+        .filter((t) => t.type === "income")
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      const allExpense = transactions
+        .filter((t) => t.type === "expense")
+        .reduce((sum, item) => sum + (item.amount || 0), 0);
+
+      const balance = allIncome - allExpense;
+
+      // Compute current month's income and expenses
       const currentMonthTransactions = transactions.filter((t) => {
         const d = new Date(t.date);
         return d.getMonth() + 1 === month && d.getFullYear() === year;
@@ -83,8 +94,6 @@ function Assistant() {
       const totalExpenses = currentMonthTransactions
         .filter((t) => t.type === "expense")
         .reduce((sum, item) => sum + (item.amount || 0), 0);
-
-      const balance = totalIncome - totalExpenses;
 
       const categoryTotals = {};
       currentMonthTransactions
