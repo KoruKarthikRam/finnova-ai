@@ -445,12 +445,21 @@ const generateChatResponse = async (message, history = [], userContext = null, r
 const generateInsights = async (userContext) => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "your_gemini_api_key_here" || !apiKey.trim()) {
+    const mockInsights = [
+      `Your current net balance is ₹${(userContext.balance || 0).toLocaleString('en-IN')}. Maintaining a healthy liquidity margin prevents short-term cash flow pinches and keeps your daily transaction pipeline stable. We recommend automating 20% transfers into equity index funds on salary day.`,
+    ];
+    if (userContext.healthScore !== null && userContext.healthScore < 60) {
+      mockInsights.push(`Your Financial Health Score is currently at ${userContext.healthScore}/100 (Grade: ${userContext.healthGrade || 'Needs Attention'}). This indicates higher exposure to non-essential spending. Scale back on lifestyle wants by 15% and allocate surplus toward liquid emergency reserves to boost your score.`);
+    } else {
+      mockInsights.push(`Excellent progress maintaining a strong Financial Health Score of ${userContext.healthScore || 75}/100. Your discipline in keeping fixed needs under control gives you a strong foundation to increase your monthly SIP investments by 10% each year.`);
+    }
+    if (Array.isArray(userContext.budgets) && userContext.budgets.length > 0) {
+      mockInsights.push(`You have active category budget limits configured for this month. Periodically review your actual category spending against set thresholds to ensure non-essential wants remain strictly under 30% of total take-home pay.`);
+    } else {
+      mockInsights.push(`You currently have no active category budget limits set for this month. Establishing spending limits on high-frequency categories like Food, Entertainment, and Shopping prevents impulse spending and increases your monthly savings rate.`);
+    }
     return {
-      insights: [
-        "Please configure your `GEMINI_API_KEY` in the backend `.env` file to unlock dynamic AI-generated insights.",
-        `Your current balance is ₹${userContext.balance.toLocaleString('en-IN')}. Set category budgets on the Budgets page to keep track of wants vs essentials.`,
-        "Try to maintain a savings rate above 30% to improve your financial health score grade."
-      ],
+      insights: mockInsights,
       isMock: true
     };
   }
@@ -462,7 +471,7 @@ const generateInsights = async (userContext) => {
     }
 
     const prompt = 
-      `You are FinNova AI Advisor. Analyze the user's financial context below and generate exactly 3-4 bulleted personalized financial recommendations/insights. ` +
+      `You are FinNova AI Advisor. Analyze the user's financial context below and generate exactly 3-4 detailed, multi-sentence personalized financial insights and recommendations. ` +
       `Focus on: \n` +
       `- Actionable tips to improve their current Financial Health Score \n` +
       `- Warning them about category budgets they are close to exceeding or have exceeded \n` +
@@ -470,9 +479,9 @@ const generateInsights = async (userContext) => {
       `- Suggesting steps to meet savings goals or adjust spending based on the next month's forecast. \n\n` +
       `Rules: \n` +
       `1. Use Indian Rupees (₹) for all examples, numbers, and calculations. \n` +
-      `2. Keep the recommendations brief, constructive, encouraging, and highly specific to their actual numbers. \n` +
+      `2. Make each insight comprehensive and detailed (2-3 full sentences long), providing the exact metric, why it matters, and a clear step-by-step recommendation. \n` +
       `3. Return the response as a valid JSON array of strings ONLY. Example format: \n` +
-      `["Insight 1 text here", "Insight 2 text here", "Insight 3 text here"] \n` +
+      `["Detailed multi-sentence insight 1 explaining metric, impact, and actionable step.", "Detailed multi-sentence insight 2...", "Detailed multi-sentence insight 3..."] \n` +
       `Do NOT include any markdown code blocks (like \`\`\`json) or extra text outside the JSON array. Output raw JSON. \n\n` +
       `[USER FINANCIAL CONTEXT] \n` +
       `- Account Balance: ₹${userContext.balance} \n` +
@@ -514,19 +523,19 @@ const generateInsights = async (userContext) => {
     };
   } catch (error) {
     console.error("Error generating insights from Gemini:", error.message);
-    // Fallback to rules-based insights if LLM fails
+    // Fallback to rich multi-sentence insights if LLM fails
     const mockInsights = [
-      `Your current balance is ₹${(userContext.balance || 0).toLocaleString('en-IN')}. Keep tracking your daily transactions.`,
+      `Your current balance is ₹${(userContext.balance || 0).toLocaleString('en-IN')}. Maintaining a healthy liquidity margin prevents short-term cash flow pinches and keeps your daily transaction pipeline stable. We recommend automating 20% transfers into index funds on salary day.`,
     ];
     if (userContext.healthScore !== null && userContext.healthScore < 60) {
-      mockInsights.push("Your financial health score is under 60. We recommend scaling back on non-essential spending (Wants) to improve budget adherence.");
+      mockInsights.push(`Your Financial Health Score is currently at ${userContext.healthScore}/100. This indicates higher exposure to non-essential spending. Scale back on lifestyle wants by 15% and allocate surplus toward liquid emergency reserves to improve your score.`);
     } else {
-      mockInsights.push("Excellent work maintaining a stable financial health score. Consider allocating excess savings toward active goals.");
+      mockInsights.push(`Excellent work maintaining a stable Financial Health Score of ${userContext.healthScore || 75}/100. Consider allocating excess monthly savings toward active goals or stepping up your mutual fund SIPs.`);
     }
     if (Array.isArray(userContext.budgets) && userContext.budgets.length > 0) {
-      mockInsights.push("Review your active category budgets on the Dashboard to verify you are staying within limits.");
+      mockInsights.push("Review your active category budgets on the Budgets page to verify you are staying within limits and preventing non-essential spending spikes.");
     } else {
-      mockInsights.push("Create a category budget on the Budgets page to start analyzing your spending limits.");
+      mockInsights.push("Create category budget limits on the Budgets page to start analyzing your spending limits and increasing your monthly savings rate.");
     }
     return {
       insights: mockInsights,

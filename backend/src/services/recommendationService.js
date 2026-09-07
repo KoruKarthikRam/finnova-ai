@@ -60,7 +60,7 @@ const generateUserRecommendations = async (userId) => {
         category: "Savings",
         priority: "High",
         badgeColor: "rose",
-        reason: `Your current monthly savings rate is ${Math.max(0, Math.round(savingsRate))}%. Build an emergency reserve to protect against unforeseen expenses.`,
+        reason: `Your current monthly savings rate is at ${Math.max(0, Math.round(savingsRate))}%, which is below the target benchmark of 20-30%. Building a dedicated 3 to 6-month liquid emergency cushion prevents forced distress selling of long-term investments during unexpected financial shocks.`,
         actionText: "Build Safety Cushion"
       });
     }
@@ -74,7 +74,7 @@ const generateUserRecommendations = async (userId) => {
         category: "Budgeting",
         priority: "High",
         badgeColor: "amber",
-        reason: `${Math.round(nonEssentialRatio)}% of your expenses this month went to non-essential wants. Use the 50/30/20 rule to balance your spending.`,
+        reason: `${Math.round(nonEssentialRatio)}% of your expenses this month went toward non-essential wants (dining, shopping, OTT, trips). Implementing the 50/30/20 rule caps discretionary lifestyle costs at 30% and channels your surplus directly into compounding assets.`,
         actionText: "Optimize Budget"
       });
     }
@@ -88,12 +88,12 @@ const generateUserRecommendations = async (userId) => {
         category: "Loans",
         priority: "Critical",
         badgeColor: "rose",
-        reason: `Your Financial Health Score is ${healthScore}/100. Learn how timely EMI management and credit score strategies can boost your rating.`,
+        reason: `Your Financial Health Score is currently at ${healthScore}/100. Improving credit utilization below 30% and maintaining strict on-time EMI repayments will boost your rating above 750+, unlocking lower interest rates across future credit applications.`,
         actionText: "Boost Credit Score"
       });
     }
 
-    // Rule 4: High Salary/Income (> ₹62,500/mo -> ~₹7.5L/yr) - Tax Optimization
+    // Rule 4: High Salary/Income (> ₹60,000/mo) - Tax Optimization
     if (totalIncome >= 60000 || totalExpenses >= 50000) {
       recommendations.push({
         id: "rec-tax-savings",
@@ -102,7 +102,7 @@ const generateUserRecommendations = async (userId) => {
         category: "Taxes",
         priority: "Medium",
         badgeColor: "indigo",
-        reason: "You are in an eligible tax bracket! Claim up to ₹1.5 Lakhs u/s 80C and ₹25,000 u/s 80D to save on annual taxes.",
+        reason: `Your income profile puts you in an active tax bracket. Claiming up to ₹1.5 Lakhs under Section 80C (ELSS/PPF/EPF) and ₹25,000 under Section 80D (Health Insurance) reduces annual taxable income and boosts your net take-home salary under the Old Tax Regime.`,
         actionText: "Save Tax Now"
       });
     }
@@ -116,7 +116,7 @@ const generateUserRecommendations = async (userId) => {
         category: "Investments",
         priority: "High",
         badgeColor: "emerald",
-        reason: `Excellent job! You maintain a strong ${Math.round(savingsRate)}% savings rate. Put your surplus cash flow into market-linked SIPs to compound wealth.`,
+        reason: `Outstanding job maintaining a strong ${Math.round(savingsRate)}% monthly savings rate! Route your excess cash flow into automated Nifty 50 Index Fund SIPs to harness rupee cost averaging and build long-term multi-crore wealth.`,
         actionText: "Start Compounding"
       });
     }
@@ -130,7 +130,7 @@ const generateUserRecommendations = async (userId) => {
         category: "Retirement",
         priority: "Normal",
         badgeColor: "indigo",
-        reason: "Learn the 25x Rule and 4% withdrawal strategy to achieve long-term financial independence early.",
+        reason: "Explore the 25x Rule and 4% safe withdrawal strategy to achieve Financial Independence and Retire Early (FIRE). Utilize NPS for an extra ₹50,000 tax deduction under Section 80CCD(1B).",
         actionText: "Explore FIRE Plan"
       });
     }

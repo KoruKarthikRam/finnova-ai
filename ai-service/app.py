@@ -349,7 +349,7 @@ def detect_anomalies(payload: AnomalyRequest):
                 "category": row["category"],
                 "date": row["date"],
                 "description": row["description"],
-                "reason": "This transaction amount is unusually high or outlier compared to your other expenses."
+                "reason": f"This ₹{float(row['amount']):,.2f} transaction in '{row['category']}' deviates significantly from your typical historical baseline. The Isolation Forest machine learning model flagged it as an expense outlier that poses a potential category budget risk."
             })
 
         return {
