@@ -14,6 +14,7 @@ const aiRoutes = require("./routes/aiRoutes");
 const recommendationRoutes = require("./routes/recommendationRoutes");
 const reportRoutes = require("./routes/reportRoutes");
 const subscriptionRoutes = require("./routes/subscriptionRoutes");
+const metalRoutes = require("./routes/metalRoutes");
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/recommendations", recommendationRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/subscriptions", subscriptionRoutes);
+app.use("/api/metals", metalRoutes);
 
 // Test route
 app.get("/", (req, res) => {

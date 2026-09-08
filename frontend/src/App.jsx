@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Transactions from "./pages/Transactions";
 import Budget from "./pages/Budget";
 import Goals from "./pages/Goals";
+import PreciousMetals from "./pages/PreciousMetals";
 import Learning from "./pages/Learning";
 import Reports from "./pages/Reports";
 import Subscriptions from "./pages/Subscriptions";
@@ -110,6 +111,14 @@ function AppContent() {
               element={
                 <ProtectedRoute>
                   <Goals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/metals"
+              element={
+                <ProtectedRoute>
+                  <PreciousMetals />
                 </ProtectedRoute>
               }
             />

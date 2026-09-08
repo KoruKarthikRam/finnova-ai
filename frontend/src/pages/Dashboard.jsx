@@ -64,6 +64,7 @@ function Dashboard() {
   const [forecastData, setForecastData] = useState(null);
   const [insights, setInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(true);
+  const [metalRates, setMetalRates] = useState(null);
 
   // Simulator State
   const [wantsCutPercent, setWantsCutPercent] = useState(15);
@@ -128,7 +129,8 @@ function Dashboard() {
       axios.get(`${API_BASE_URL}/api/ai/anomalies`, config),
       axios.get(`${API_BASE_URL}/api/ai/forecast`, config),
       axios.get(`${API_BASE_URL}/api/ai/insights`, config),
-    ]).then(([anomalyRes, forecastRes, insightsRes]) => {
+      axios.get(`${API_BASE_URL}/api/metals/live`, config),
+    ]).then(([anomalyRes, forecastRes, insightsRes, metalRes]) => {
       if (anomalyRes.status === "fulfilled" && anomalyRes.value?.data?.success) {
         setAnomalies(Array.isArray(anomalyRes.value.data.anomalies) ? anomalyRes.value.data.anomalies : []);
       }
@@ -137,6 +139,9 @@ function Dashboard() {
       }
       if (insightsRes.status === "fulfilled" && insightsRes.value?.data?.success) {
         setInsights(Array.isArray(insightsRes.value.data.insights) ? insightsRes.value.data.insights : []);
+      }
+      if (metalRes.status === "fulfilled" && metalRes.value?.data?.success) {
+        setMetalRates(metalRes.value.data);
       }
     }).catch((aiErr) => {
       console.warn("Background AI fetching partial error:", aiErr);
@@ -290,6 +295,12 @@ function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-3">
           <Link
+            to="/metals"
+            className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-4 py-2 text-xs font-black text-white transition shadow-xs cursor-pointer flex items-center gap-1.5"
+          >
+            <span>🪙</span> Gold: {metalRates ? formatCurrency(metalRates.gold?.rates["24K"]?.perGram) : "₹7,480"}/g
+          </Link>
+          <Link
             to="/reports"
             className="rounded-xl bg-white hover:bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 hover:text-slate-900 border border-slate-200 transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
@@ -357,6 +368,49 @@ function Dashboard() {
                     {savingsRate >= 30 ? "Optimal" : "Low Savings"}
                   </span>
                 </div>
+              </div>
+            </div>
+          </SectionErrorBoundary>
+
+          {/* Live Precious Metals Ticker Widget */}
+          <SectionErrorBoundary>
+            <div className="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-slate-100 rounded-3xl p-5 border border-amber-200/80 shadow-xs flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-bold text-xl shadow-xs shrink-0">
+                  🪙
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-extrabold text-slate-900 text-sm">Live Indian Bullion Spot Rates</h4>
+                    <span className="flex items-center gap-1 text-xxs font-extrabold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      LIVE
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 font-medium">Real-time spot rates in INR (₹) per gram & 1kg.</p>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap items-center gap-4 text-xs font-extrabold text-slate-800 shrink-0">
+                <div className="bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-slate-400 text-xxs font-bold block uppercase">24K Gold</span>
+                  <span className="text-amber-600">{metalRates ? formatCurrency(metalRates.gold?.rates["24K"]?.perGram) : "₹7,480"}/g</span>
+                </div>
+                <div className="bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-slate-400 text-xxs font-bold block uppercase">22K Gold</span>
+                  <span className="text-amber-700">{metalRates ? formatCurrency(metalRates.gold?.rates["22K"]?.perGram) : "₹6,857"}/g</span>
+                </div>
+                <div className="bg-white px-3.5 py-1.5 rounded-xl border border-slate-200 shadow-2xs">
+                  <span className="text-slate-400 text-xxs font-bold block uppercase">Silver</span>
+                  <span className="text-slate-700">{metalRates ? formatCurrency(metalRates.silver?.rates?.perKg) : "₹88,500"}/kg</span>
+                </div>
+
+                <Link
+                  to="/metals"
+                  className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                >
+                  Bullion Hub & Calculator →
+                </Link>
               </div>
             </div>
           </SectionErrorBoundary>

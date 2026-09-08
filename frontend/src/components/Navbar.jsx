@@ -34,6 +34,7 @@ function Navbar() {
     { path: "/transactions", label: "Transactions", icon: "💸" },
     { path: "/budget", label: "Budget", icon: "⚖️" },
     { path: "/goals", label: "Goals", icon: "🎯" },
+    { path: "/metals", label: "Gold & Silver", icon: "🪙" },
     { path: "/learning", label: "Learning", icon: "🎓" },
     { path: "/reports", label: "Reports", icon: "📄" },
     { path: "/subscriptions", label: "Subscriptions", icon: "💳" },
