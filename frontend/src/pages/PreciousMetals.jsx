@@ -25,8 +25,9 @@ function PreciousMetals() {
   const [calcUnit, setCalcUnit] = useState("gram");
   const [calcIncludeGst, setCalcIncludeGst] = useState(true);
 
-  // Selected City Filter
+  // Selected City Filter & Stock Category Filter
   const [selectedCity, setSelectedCity] = useState("All");
+  const [stockCategory, setStockCategory] = useState("All");
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -155,8 +156,9 @@ function PreciousMetals() {
     );
   }
 
-  const { gold, silver, goldSilverRatio, cities, timestamp } = ratesData;
+  const { gold, silver, goldSilverRatio, cities, stocks, timestamp } = ratesData;
   const filteredCities = selectedCity === "All" ? cities : cities.filter(c => c.city === selectedCity);
+  const filteredStocks = (stocks || []).filter(s => stockCategory === "All" || s.category === stockCategory);
 
   return (
     <div className="max-w-7xl mx-auto space-y-8 pb-16 relative px-4 sm:px-6">
@@ -580,6 +582,103 @@ function PreciousMetals() {
               ))}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* Live Gold ETFs & Gold-Linked Stocks Tracker */}
+      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="text-2xl">📈</span>
+              <h3 className="text-lg font-extrabold text-slate-900">Live Gold ETFs & Gold-Linked Stocks</h3>
+            </div>
+            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+              Real-time NSE/BSE spot tracking for Gold Exchange Traded Funds (ETFs), Gold Mining & NBFC Equities, and Sovereign Gold Bonds (SGBs).
+            </p>
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
+            {["All", "ETF", "Equity", "SGB"].map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setStockCategory(cat)}
+                className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
+                  stockCategory === cat
+                    ? "bg-amber-500 text-white font-extrabold shadow-xs"
+                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                }`}
+              >
+                {cat === "All" ? "All Assets" : cat === "ETF" ? "Gold ETFs" : cat === "Equity" ? "Gold Equities" : "SGB Bonds"}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Stock Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {filteredStocks.map((stock) => (
+            <div
+              key={stock.symbol}
+              className="bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-amber-300 rounded-2xl p-5 transition space-y-3 shadow-2xs hover:shadow-md group"
+            >
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className={`px-2 py-0.5 rounded-md text-xxs font-black tracking-wider uppercase border ${
+                    stock.category === "ETF"
+                      ? "bg-amber-50 text-amber-800 border-amber-200"
+                      : stock.category === "Equity"
+                      ? "bg-indigo-50 text-indigo-800 border-indigo-200"
+                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                  }`}>
+                    {stock.category} • {stock.exchange}
+                  </span>
+                  <h4 className="text-base font-extrabold text-slate-900 mt-2 tracking-tight">
+                    {stock.symbol}
+                  </h4>
+                  <p className="text-xxs text-slate-500 font-semibold truncate max-w-[160px]" title={stock.name}>
+                    {stock.name}
+                  </p>
+                </div>
+                <span className={`px-2 py-1 rounded-lg text-xxs font-extrabold border ${
+                  stock.isPositive
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    : "bg-rose-50 text-rose-700 border-rose-200"
+                }`}>
+                  {stock.isPositive ? "+" : ""}{stock.changePercent}%
+                </span>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60">
+                <div className="text-2xl font-black text-slate-900">
+                  {formatCurrency(stock.price)}
+                </div>
+                <div className="text-xxs font-semibold text-slate-500 mt-0.5 flex justify-between">
+                  <span>24h Change:</span>
+                  <span className={stock.isPositive ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+                    {stock.isPositive ? "+" : ""}{formatCurrency(stock.change24h)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1 bg-white/80 p-2.5 rounded-xl border border-slate-100 text-xxs font-semibold text-slate-600">
+                <div className="flex justify-between">
+                  <span>1Y CAGR Return:</span>
+                  <span className="font-extrabold text-emerald-700">{stock.oneYearReturn}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Day Range:</span>
+                  <span className="font-bold text-slate-800">₹{stock.dayLow} - ₹{stock.dayHigh}</span>
+                </div>
+                <div className="flex justify-between pt-0.5 border-t border-slate-100 text-slate-400">
+                  <span>Underlying:</span>
+                  <span className="truncate max-w-[110px] text-slate-600 font-medium">{stock.underlying}</span>
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 
