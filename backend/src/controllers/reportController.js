@@ -1,4 +1,4 @@
-const { generateMonthlyReport } = require("../services/reportService");
+const { generateMonthlyReport, generateCustomReport } = require("../services/reportService");
 
 const getMonthlyReport = async (req, res) => {
   const { month, year } = req.query;
@@ -14,6 +14,21 @@ const getMonthlyReport = async (req, res) => {
   }
 };
 
+const getCustomReport = async (req, res) => {
+  const { startDate, endDate } = req.query;
+  try {
+    const result = await generateCustomReport(req.user.id, startDate, endDate);
+    return res.json(result);
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to generate custom report",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   getMonthlyReport,
+  getCustomReport,
 };

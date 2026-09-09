@@ -4,9 +4,17 @@ import { API_BASE_URL } from "../api/config";
 
 function Reports() {
   const current = new Date();
+  const padTwo = (n) => String(n).padStart(2, "0");
+  const defaultStartDate = `${current.getFullYear()}-${padTwo(current.getMonth() + 1)}-01`;
+  const defaultEndDate = `${current.getFullYear()}-${padTwo(current.getMonth() + 1)}-${padTwo(current.getDate())}`;
+
+  const [reportMode, setReportMode] = useState("monthly"); // "monthly" | "custom"
   const [selectedMonth, setSelectedMonth] = useState(current.getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(current.getFullYear());
   
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
+
   const [report, setReport] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
@@ -37,14 +45,27 @@ function Reports() {
     };
   };
 
-  const fetchReport = async (month, year) => {
+  const fetchReport = async (mode = reportMode, params = {}) => {
     try {
       setIsLoading(true);
       setError("");
-      const response = await axios.get(
-        `${API_BASE_URL}/api/reports/monthly?month=${month}&year=${year}`,
-        getAuthConfig()
-      );
+      let url = "";
+      if (mode === "monthly") {
+        const m = params.month !== undefined ? params.month : selectedMonth;
+        const y = params.year !== undefined ? params.year : selectedYear;
+        url = `${API_BASE_URL}/api/reports/monthly?month=${m}&year=${y}`;
+      } else {
+        const s = params.startDate || startDate;
+        const e = params.endDate || endDate;
+        if (new Date(s) > new Date(e)) {
+          setError("Start date cannot be later than end date.");
+          setIsLoading(false);
+          return;
+        }
+        url = `${API_BASE_URL}/api/reports/custom?startDate=${s}&endDate=${e}`;
+      }
+
+      const response = await axios.get(url, getAuthConfig());
 
       if (response.data.success) {
         setReport(response.data);
@@ -53,15 +74,24 @@ function Reports() {
       }
     } catch (err) {
       console.error("Failed to load report:", err);
-      setError("Unable to generate monthly financial report.");
+      setError("Unable to generate financial report.");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchReport(selectedMonth, selectedYear);
+    fetchReport("monthly", { month: selectedMonth, year: selectedYear });
   }, []);
+
+  const handleModeChange = (newMode) => {
+    setReportMode(newMode);
+    if (newMode === "monthly") {
+      fetchReport("monthly", { month: selectedMonth, year: selectedYear });
+    } else {
+      fetchReport("custom", { startDate, endDate });
+    }
+  };
 
   const handlePrint = () => {
     window.print();
@@ -76,53 +106,115 @@ function Reports() {
     <div className="max-w-5xl mx-auto space-y-8 pb-16">
       
       {/* Top Controls Header (Hidden on Print) */}
-      <div className="print:hidden flex flex-col sm:flex-row justify-between sm:items-center gap-4 bg-white p-6 rounded-3xl border border-slate-100 shadow-sm">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
-            <span>📄</span> Intelligent Monthly Reports
-          </h1>
-          <p className="text-slate-500 text-xs mt-1">
-            Compile executive statements, category audits, and AI forecasts into printable PDFs.
-          </p>
+      <div className="print:hidden bg-white p-6 rounded-3xl border border-slate-100 shadow-sm space-y-6">
+        
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-4">
+          <div>
+            <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-2">
+              <span>📄</span> Intelligent Financial Reports
+            </h1>
+            <p className="text-slate-500 text-xs mt-1">
+              Compile monthly or custom date range executive statements, category audits, and AI forecasts into printable PDFs.
+            </p>
+          </div>
+
+          {/* Mode Tabs */}
+          <div className="flex items-center p-1 bg-slate-100/80 rounded-2xl border border-slate-200/60 self-start sm:self-auto">
+            <button
+              onClick={() => handleModeChange("monthly")}
+              className={`px-4 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+                reportMode === "monthly"
+                  ? "bg-white text-indigo-600 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              📅 Monthly Report
+            </button>
+            <button
+              onClick={() => handleModeChange("custom")}
+              className={`px-4 py-2 text-xs font-extrabold rounded-xl transition cursor-pointer ${
+                reportMode === "custom"
+                  ? "bg-white text-indigo-600 shadow-xs"
+                  : "text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              📆 Custom Date Range
+            </button>
+          </div>
         </div>
 
-        {/* Month / Year Selector & Print Button */}
-        <div className="flex flex-wrap items-center gap-3">
-          <select
-            value={selectedMonth}
-            onChange={(e) => {
-              const m = Number(e.target.value);
-              setSelectedMonth(m);
-              fetchReport(m, selectedYear);
-            }}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs"
-          >
-            {months.map((m) => (
-              <option key={m.value} value={m.value}>{m.label}</option>
-            ))}
-          </select>
+        {/* Filter Controls Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          {reportMode === "monthly" ? (
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="text-xs font-bold text-slate-500">Select Month & Year:</span>
+              <select
+                value={selectedMonth}
+                onChange={(e) => {
+                  const m = Number(e.target.value);
+                  setSelectedMonth(m);
+                  fetchReport("monthly", { month: m, year: selectedYear });
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs cursor-pointer"
+              >
+                {months.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => {
-              const y = Number(e.target.value);
-              setSelectedYear(y);
-              fetchReport(selectedMonth, y);
-            }}
-            className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs"
-          >
-            {years.map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+              <select
+                value={selectedYear}
+                onChange={(e) => {
+                  const y = Number(e.target.value);
+                  setSelectedYear(y);
+                  fetchReport("monthly", { month: selectedMonth, year: y });
+                }}
+                className="rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs cursor-pointer"
+              >
+                {years.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">From:</span>
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs cursor-pointer"
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-500">To:</span>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 focus:outline-none focus:border-indigo-500 shadow-xxs cursor-pointer"
+                />
+              </div>
+
+              <button
+                onClick={() => fetchReport("custom", { startDate, endDate })}
+                className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white hover:bg-slate-800 transition cursor-pointer"
+              >
+                🔍 Generate Report
+              </button>
+            </div>
+          )}
 
           <button
             onClick={handlePrint}
-            className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-sm cursor-pointer flex items-center gap-1.5"
+            className="rounded-xl bg-indigo-600 px-5 py-2 text-xs font-bold text-white hover:bg-indigo-700 transition shadow-sm cursor-pointer flex items-center gap-1.5 ml-auto"
           >
             <span>🖨️</span> Print / Save PDF
           </button>
         </div>
+
       </div>
 
       {error && (
@@ -134,7 +226,7 @@ function Reports() {
       {isLoading ? (
         <div className="rounded-3xl border border-slate-100 bg-white p-12 text-center space-y-3 shadow-sm print:hidden">
           <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="text-xs font-bold text-slate-600">Compiling executive financial report...</p>
+          <p className="text-xs font-bold text-slate-600">Compiling financial report statement...</p>
         </div>
       ) : report ? (
         /* Printable Executive Statement Sheet */
@@ -146,10 +238,12 @@ function Reports() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-black text-indigo-600 tracking-tight">FinNova AI</span>
                 <span className="text-xxs font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded-full">
-                  Executive Statement
+                  {report.reportHeader?.isCustomRange ? "Custom Range Statement" : "Executive Statement"}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-1 font-medium">Monthly Financial Audit & Performance Summary</p>
+              <p className="text-xs text-slate-500 mt-1 font-medium">
+                {report.reportHeader?.isCustomRange ? "Custom Date Range Financial Audit & Performance Summary" : "Monthly Financial Audit & Performance Summary"}
+              </p>
             </div>
 
             <div className="text-left sm:text-right text-xs space-y-1 font-medium text-slate-600">
@@ -223,7 +317,7 @@ function Reports() {
           {report.budgetAdherence && report.budgetAdherence.length > 0 && (
             <div className="space-y-3">
               <h3 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-2">
-                Monthly Category Budget Audit
+                Category Budget Audit
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {report.budgetAdherence.map((b, idx) => (
