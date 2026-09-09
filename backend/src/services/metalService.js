@@ -3,8 +3,34 @@ const cacheService = require("./cacheService");
 
 /**
  * Service to fetch and calculate live Gold and Silver rates in INR (₹)
- */
-class MetalService {
+ */class MetalService {
+  constructor() {
+    this.CACHE_KEY = "live_metal_rates_inr";
+    this.pendingFetchPromise = null;
+    this.refreshInterval = null;
+    this.init();
+  }
+
+  /**
+   * Warm up cache on startup & schedule periodic background refresh every 3 minutes
+   */
+  init() {
+    this.getLiveRates().catch((err) =>
+      console.warn("[MetalService] Startup warmup warning:", err.message)
+    );
+
+    if (!this.refreshInterval) {
+      this.refreshInterval = setInterval(() => {
+        this.fetchFreshRates().catch((err) =>
+          console.warn("[MetalService] Background refresh warning:", err.message)
+        );
+      }, 180000);
+      if (this.refreshInterval.unref) {
+        this.refreshInterval.unref();
+      }
+    }
+  }
+
   /**
    * Generates realistic baseline fallback rates for Indian market in INR
    */
@@ -110,22 +136,36 @@ class MetalService {
   }
 
   /**
-   * Get Live Gold and Silver Rates in INR (with 5-min caching)
+   * Get Live Gold and Silver Rates in INR with single-flight request deduplication
    */
   async getLiveRates() {
-    const CACHE_KEY = "live_metal_rates_inr";
-    const cachedData = cacheService.get(CACHE_KEY);
-
+    const cachedData = cacheService.get(this.CACHE_KEY);
     if (cachedData) {
       return cachedData;
     }
 
+    // Single-flight deduplication: return existing pending promise if already fetching
+    if (this.pendingFetchPromise) {
+      return this.pendingFetchPromise;
+    }
+
+    this.pendingFetchPromise = this.fetchFreshRates().finally(() => {
+      this.pendingFetchPromise = null;
+    });
+
+    return this.pendingFetchPromise;
+  }
+
+  /**
+   * Fetch fresh live rates from external APIs or fallback
+   */
+  async fetchFreshRates() {
     try {
-      // Attempt fetching live USD XAU/XAG rates and USD/INR exchange rate
+      // Attempt fetching live USD XAU/XAG rates and USD/INR exchange rate with 1800ms timeout
       const [goldRes, silverRes, inrRes] = await Promise.all([
-        axios.get("https://api.gold-api.com/price/XAU", { timeout: 3500 }),
-        axios.get("https://api.gold-api.com/price/XAG", { timeout: 3500 }),
-        axios.get("https://open.er-api.com/v6/latest/USD", { timeout: 3500 })
+        axios.get("https://api.gold-api.com/price/XAU", { timeout: 1800 }),
+        axios.get("https://api.gold-api.com/price/XAG", { timeout: 1800 }),
+        axios.get("https://open.er-api.com/v6/latest/USD", { timeout: 1800 })
       ]);
 
       if (goldRes.data?.price && silverRes.data?.price && inrRes.data?.rates?.INR) {
@@ -205,7 +245,7 @@ class MetalService {
           cities: this.getCityWiseRates(gold24kPerGram, gold22kPerGram, silverPerGram)
         };
 
-        cacheService.set(CACHE_KEY, result, 300);
+        cacheService.set(this.CACHE_KEY, result, 300);
         return result;
       }
     } catch (err) {
@@ -214,7 +254,7 @@ class MetalService {
 
     // Fallback if API fails or times out
     const fallback = this.getFallbackRates();
-    cacheService.set(CACHE_KEY, fallback, 300);
+    cacheService.set(this.CACHE_KEY, fallback, 300);
     return fallback;
   }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
 import {
@@ -24,8 +24,6 @@ function PreciousMetals() {
   const [calcWeight, setCalcWeight] = useState(10);
   const [calcUnit, setCalcUnit] = useState("gram");
   const [calcIncludeGst, setCalcIncludeGst] = useState(true);
-  const [calcResult, setCalcResult] = useState(null);
-  const [calcLoading, setCalcLoading] = useState(false);
 
   // Selected City Filter
   const [selectedCity, setSelectedCity] = useState("All");
@@ -69,40 +67,61 @@ function PreciousMetals() {
     }
   };
 
-  const handleCalculate = async () => {
-    setCalcLoading(true);
-    try {
-      const config = getAuthConfig();
-      const res = await axios.post(
-        `${API_BASE_URL}/api/metals/calculate`,
-        {
-          metal: calcMetal,
-          purity: calcPurity,
-          weight: Number(calcWeight) || 0,
-          unit: calcUnit,
-          includeGst: calcIncludeGst
-        },
-        config
-      );
-      if (res.data && res.data.success) {
-        setCalcResult(res.data.data);
-      }
-    } catch (err) {
-      console.error("Calculation error:", err);
-    } finally {
-      setCalcLoading(false);
+  // Instant client-side calculator computation without network latency
+  const calcResult = useMemo(() => {
+    if (!ratesData) return null;
+    let gramWeight = Number(calcWeight) || 0;
+
+    switch (String(calcUnit).toLowerCase()) {
+      case "sovereign":
+      case "pavan":
+        gramWeight = gramWeight * 8;
+        break;
+      case "tola":
+        gramWeight = gramWeight * 11.6638;
+        break;
+      case "kg":
+        gramWeight = gramWeight * 1000;
+        break;
+      case "ounce":
+      case "oz":
+        gramWeight = gramWeight * 31.1035;
+        break;
+      case "gram":
+      default:
+        gramWeight = gramWeight * 1;
+        break;
     }
-  };
+
+    let pricePerGram = 0;
+    if (calcMetal.toLowerCase() === "silver") {
+      pricePerGram = ratesData.silver?.rates?.perGram || 0;
+    } else {
+      const selectedPurity = calcPurity.toUpperCase();
+      pricePerGram = ratesData.gold?.rates?.[selectedPurity]?.perGram || ratesData.gold?.rates?.["24K"]?.perGram || 0;
+    }
+
+    const baseAmount = Math.round(gramWeight * pricePerGram);
+    const gstAmount = calcIncludeGst ? Math.round(baseAmount * 0.03) : 0;
+    const totalAmount = baseAmount + gstAmount;
+
+    return {
+      weightInput: Number(calcWeight),
+      unit: calcUnit,
+      convertedGramWeight: Number(gramWeight.toFixed(3)),
+      metal: calcMetal,
+      purity: calcMetal.toLowerCase() === "gold" ? calcPurity : "99.9%",
+      pricePerGram,
+      baseAmount,
+      gstPercent: calcIncludeGst ? 3 : 0,
+      gstAmount,
+      totalAmount
+    };
+  }, [ratesData, calcMetal, calcPurity, calcWeight, calcUnit, calcIncludeGst]);
 
   useEffect(() => {
     fetchRates();
   }, []);
-
-  useEffect(() => {
-    if (ratesData) {
-      handleCalculate();
-    }
-  }, [calcMetal, calcPurity, calcWeight, calcUnit, calcIncludeGst, ratesData]);
 
   const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "₹0";
