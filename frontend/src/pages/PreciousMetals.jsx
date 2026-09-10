@@ -11,7 +11,8 @@ import {
   Legend,
   ReferenceLine,
   LineChart,
-  Line
+  Line,
+  CartesianGrid
 } from "recharts";
 
 function PreciousMetals() {
@@ -35,6 +36,7 @@ function PreciousMetals() {
   // Live Stock Graph State
   const [selectedStockSymbol, setSelectedStockSymbol] = useState("GOLDBEES");
   const [stockTimeframe, setStockTimeframe] = useState("1D");
+  const [curveStyle, setCurveStyle] = useState("linear"); // "linear" for neat sharp vector curves, "monotone" for smooth
   const [stockGraphData, setStockGraphData] = useState(null);
   const [stockGraphLoading, setStockGraphLoading] = useState(false);
   const [isLiveStream, setIsLiveStream] = useState(true);
@@ -266,7 +268,7 @@ function PreciousMetals() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 font-medium">
-            Real-time 24K, 22K, 18K Gold and Fine Silver spot pricing across major Indian cities with bullion calculator & live stock graph.
+            Real-time 24K, 22K, 18K Gold and Fine Silver spot pricing across major Indian cities with bullion calculator & sharp vector stock graphs.
           </p>
         </div>
 
@@ -564,7 +566,7 @@ function PreciousMetals() {
           <div className="flex justify-between items-center border-b border-slate-100 pb-3">
             <div>
               <h3 className="text-base font-extrabold text-slate-900">7-Day Gold Trend (₹ / Gram 24K)</h3>
-              <p className="text-xs text-slate-500">Intraday spot market price trajectory</p>
+              <p className="text-xs text-slate-500">Intraday spot market sharp vector price trajectory</p>
             </div>
             <div className="text-xs font-extrabold text-amber-700 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
               Ratio: {goldSilverRatio} (Au/Ag)
@@ -580,13 +582,22 @@ function PreciousMetals() {
                     <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" opacity={0.6} vertical={false} />
                 <XAxis dataKey="date" stroke="#64748b" fontSize={11} tickLine={false} />
                 <YAxis domain={["auto", "auto"]} stroke="#64748b" fontSize={11} tickLine={false} axisLine={false} />
                 <Tooltip
                   formatter={(val) => [`₹${Number(val).toLocaleString("en-IN")}`, "24K Gold Rate"]}
                   contentStyle={{ backgroundColor: "#ffffff", borderColor: "#f59e0b", borderRadius: "12px", color: "#0f172a" }}
                 />
-                <Area type="monotone" dataKey="gold24kPerGram" stroke="#d97706" strokeWidth={3} fillOpacity={1} fill="url(#goldGradient)" />
+                <Area
+                  type="linear"
+                  dataKey="gold24kPerGram"
+                  stroke="#d97706"
+                  strokeWidth={3}
+                  fillOpacity={1}
+                  fill="url(#goldGradient)"
+                  activeDot={{ r: 5, fill: "#d97706", stroke: "#ffffff", strokeWidth: 2 }}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -639,12 +650,38 @@ function PreciousMetals() {
               </h2>
             </div>
             <p className="text-xs text-slate-400 font-medium">
-              Real-time intraday tick chart and technical data for Gold spot pricing, Gold ETFs, NBFC equities & Sovereign Gold Bonds.
+              Real-time sharp vector intraday tick chart & technical indicators for Gold spot, Gold ETFs, NBFC equities & SGBs.
             </p>
           </div>
 
-          {/* Timeframe Controls & Live Stream Toggle */}
+          {/* Timeframe Controls, Curve Style Toggle & Live Stream Toggle */}
           <div className="flex flex-wrap items-center gap-3">
+            {/* Curve Style Switcher (Sharp vs Smooth) */}
+            <div className="flex items-center bg-slate-800/90 p-1 rounded-2xl border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setCurveStyle("linear")}
+                className={`px-3 py-1.5 rounded-xl text-xxs font-black transition cursor-pointer flex items-center gap-1 ${
+                  curveStyle === "linear"
+                    ? "bg-amber-500 text-slate-950 shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-700/60"
+                }`}
+              >
+                ⚡ Sharp Curves
+              </button>
+              <button
+                type="button"
+                onClick={() => setCurveStyle("monotone")}
+                className={`px-3 py-1.5 rounded-xl text-xxs font-black transition cursor-pointer flex items-center gap-1 ${
+                  curveStyle === "monotone"
+                    ? "bg-amber-500 text-slate-950 shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-700/60"
+                }`}
+              >
+                🌊 Smooth Curves
+              </button>
+            </div>
+
             {stockTimeframe === "1D" && (
               <button
                 type="button"
@@ -771,10 +808,11 @@ function PreciousMetals() {
               <AreaChart data={stockGraphData.points}>
                 <defs>
                   <linearGradient id="stockGradPos" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor={stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.35} />
-                    <stop offset="95%" stopColor={stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.0} />
+                    <stop offset="5%" stopColor={stockGraphData.symbol === "SPOT_24K" ? "#f59e0b" : stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.4} />
+                    <stop offset="95%" stopColor={stockGraphData.symbol === "SPOT_24K" ? "#f59e0b" : stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.0} />
                   </linearGradient>
                 </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" opacity={0.35} vertical={false} />
                 <XAxis dataKey="timeLabel" stroke="#64748b" fontSize={10} tickLine={false} />
                 <YAxis domain={["auto", "auto"]} stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
                 <Tooltip
@@ -782,13 +820,16 @@ function PreciousMetals() {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="bg-slate-950/95 border border-slate-700 p-3 rounded-xl shadow-2xl text-xs space-y-1.5 font-sans">
-                          <div className="text-slate-400 text-xxs font-bold">{data.timeLabel}</div>
-                          <div className="text-base font-black text-amber-400">₹{Number(data.price).toLocaleString("en-IN")}</div>
-                          <div className="grid grid-cols-2 gap-x-4 text-xxs text-slate-300 border-t border-slate-800 pt-1">
-                            <span>High: ₹{data.high}</span>
-                            <span>Low: ₹{data.low}</span>
-                            <span>Vol: {data.volume?.toLocaleString("en-IN")}</span>
+                        <div className="bg-slate-950/95 border border-slate-700 p-3 rounded-xl shadow-2xl text-xs space-y-1.5 font-sans backdrop-blur-md">
+                          <div className="text-slate-400 text-xxs font-extrabold flex justify-between items-center gap-4">
+                            <span>{data.timeLabel}</span>
+                            <span className="text-amber-400 font-mono">LIVE VECTOR TICK</span>
+                          </div>
+                          <div className="text-lg font-black text-white">₹{Number(data.price).toLocaleString("en-IN")}</div>
+                          <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-xxs text-slate-300 border-t border-slate-800 pt-1.5 font-semibold">
+                            <span>High: <strong className="text-emerald-400">₹{data.high}</strong></span>
+                            <span>Low: <strong className="text-rose-400">₹{data.low}</strong></span>
+                            <span className="col-span-2">Vol: <strong className="text-slate-200">{data.volume?.toLocaleString("en-IN")}</strong></span>
                           </div>
                         </div>
                       );
@@ -797,15 +838,16 @@ function PreciousMetals() {
                   }}
                 />
                 {stockGraphData.openPrice && (
-                  <ReferenceLine y={stockGraphData.openPrice} stroke="#64748b" strokeDasharray="3 3" />
+                  <ReferenceLine y={stockGraphData.openPrice} stroke="#94a3b8" strokeDasharray="3 3" label={{ value: `Open ₹${stockGraphData.openPrice}`, fill: '#94a3b8', fontSize: 10, position: 'insideTopLeft' }} />
                 )}
                 <Area
-                  type="monotone"
+                  type={curveStyle}
                   dataKey="price"
-                  stroke={stockGraphData.isPositive ? "#10b981" : "#f43f5e"}
+                  stroke={stockGraphData.symbol === "SPOT_24K" ? "#f59e0b" : stockGraphData.isPositive ? "#10b981" : "#f43f5e"}
                   strokeWidth={2.5}
                   fillOpacity={1}
                   fill="url(#stockGradPos)"
+                  activeDot={{ r: 6, fill: stockGraphData.isPositive ? "#10b981" : "#f43f5e", stroke: "#ffffff", strokeWidth: 2 }}
                   isAnimationActive={false}
                 />
               </AreaChart>
@@ -954,7 +996,7 @@ function PreciousMetals() {
                   </div>
                 </div>
 
-                {/* Mini Sparkline Visualization */}
+                {/* Mini Sharp Vector Sparkline Visualization */}
                 <div className="h-10 w-full pt-1">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={[
@@ -965,10 +1007,10 @@ function PreciousMetals() {
                       { p: stock.price }
                     ]}>
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="p"
                         stroke={stock.isPositive ? "#10b981" : "#f43f5e"}
-                        strokeWidth={2}
+                        strokeWidth={2.2}
                         dot={false}
                       />
                     </LineChart>
