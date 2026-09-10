@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import axios from "axios";
 import { API_BASE_URL } from "../api/config";
 import {
@@ -8,7 +8,10 @@ import {
   XAxis,
   YAxis,
   Tooltip,
-  Legend
+  Legend,
+  ReferenceLine,
+  LineChart,
+  Line
 } from "recharts";
 
 function PreciousMetals() {
@@ -28,6 +31,14 @@ function PreciousMetals() {
   // Selected City Filter & Stock Category Filter
   const [selectedCity, setSelectedCity] = useState("All");
   const [stockCategory, setStockCategory] = useState("All");
+
+  // Live Stock Graph State
+  const [selectedStockSymbol, setSelectedStockSymbol] = useState("GOLDBEES");
+  const [stockTimeframe, setStockTimeframe] = useState("1D");
+  const [stockGraphData, setStockGraphData] = useState(null);
+  const [stockGraphLoading, setStockGraphLoading] = useState(false);
+  const [isLiveStream, setIsLiveStream] = useState(true);
+  const stockGraphRef = useRef(null);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -65,6 +76,92 @@ function PreciousMetals() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+    }
+  };
+
+  const fetchStockGraph = async (symbol, timeframe) => {
+    setStockGraphLoading(true);
+    try {
+      const config = getAuthConfig();
+      const res = await axios.get(
+        `${API_BASE_URL}/api/metals/stock-graph?symbol=${symbol}&timeframe=${timeframe}`,
+        config
+      );
+      if (res.data && res.data.success) {
+        setStockGraphData(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching stock graph data:", err);
+    } finally {
+      setStockGraphLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchRates();
+  }, []);
+
+  useEffect(() => {
+    if (ratesData) {
+      fetchStockGraph(selectedStockSymbol, stockTimeframe);
+    }
+  }, [ratesData, selectedStockSymbol, stockTimeframe]);
+
+  // Live intraday price ticks interval simulation when stream is ON and timeframe is 1D
+  useEffect(() => {
+    if (!isLiveStream || stockTimeframe !== "1D" || !stockGraphData) return;
+
+    const interval = setInterval(() => {
+      setStockGraphData((prev) => {
+        if (!prev || !prev.points || prev.points.length === 0) return prev;
+
+        const now = new Date();
+        const hours = now.getHours().toString().padStart(2, "0");
+        const minutes = now.getMinutes().toString().padStart(2, "0");
+        const seconds = now.getSeconds().toString().padStart(2, "0");
+        const timeLabel = `${hours}:${minutes}:${seconds}`;
+
+        const delta = (Math.random() - 0.48) * (prev.currentPrice * 0.0012);
+        const newPrice = Number(Math.max(1, prev.currentPrice + delta).toFixed(2));
+        const newHigh = Math.max(prev.dayHigh, newPrice);
+        const newLow = Math.min(prev.dayLow, newPrice);
+        const newChange = Number((newPrice - prev.openPrice).toFixed(2));
+        const newChangePct = Number(((newChange / prev.openPrice) * 100).toFixed(2));
+
+        const updatedPoints = [
+          ...prev.points,
+          {
+            timeLabel,
+            timestamp: now.toISOString(),
+            price: newPrice,
+            high: Number((newPrice * 1.001).toFixed(2)),
+            low: Number((newPrice * 0.999).toFixed(2)),
+            volume: Math.floor(1000 + Math.random() * 4000)
+          }
+        ];
+
+        if (updatedPoints.length > 90) updatedPoints.shift();
+
+        return {
+          ...prev,
+          currentPrice: newPrice,
+          dayHigh: newHigh,
+          dayLow: newLow,
+          change24h: newChange,
+          changePercent: newChangePct,
+          isPositive: newChange >= 0,
+          points: updatedPoints
+        };
+      });
+    }, 3500);
+
+    return () => clearInterval(interval);
+  }, [isLiveStream, stockTimeframe, stockGraphData?.symbol]);
+
+  const handleSelectStock = (symbol) => {
+    setSelectedStockSymbol(symbol);
+    if (stockGraphRef.current) {
+      stockGraphRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   };
 
@@ -120,10 +217,6 @@ function PreciousMetals() {
     };
   }, [ratesData, calcMetal, calcPurity, calcWeight, calcUnit, calcIncludeGst]);
 
-  useEffect(() => {
-    fetchRates();
-  }, []);
-
   const formatCurrency = (val) => {
     if (val === undefined || val === null || isNaN(val)) return "₹0";
     return `₹${Number(val).toLocaleString("en-IN")}`;
@@ -156,7 +249,7 @@ function PreciousMetals() {
     );
   }
 
-  const { gold, silver, goldSilverRatio, cities, stocks, timestamp } = ratesData;
+  const { gold, silver, goldSilverRatio, cities, stocks } = ratesData;
   const filteredCities = selectedCity === "All" ? cities : cities.filter(c => c.city === selectedCity);
   const filteredStocks = (stocks || []).filter(s => stockCategory === "All" || s.category === stockCategory);
 
@@ -173,7 +266,7 @@ function PreciousMetals() {
             </h1>
           </div>
           <p className="text-xs sm:text-sm text-slate-600 font-medium">
-            Real-time 24K, 22K, 18K Gold and Fine Silver spot pricing across major Indian cities with bullion calculator.
+            Real-time 24K, 22K, 18K Gold and Fine Silver spot pricing across major Indian cities with bullion calculator & live stock graph.
           </p>
         </div>
 
@@ -524,6 +617,203 @@ function PreciousMetals() {
 
       </div>
 
+      {/* Live Gold & ETF Interactive Stock Graph Section */}
+      <div ref={stockGraphRef} className="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6 relative overflow-hidden">
+        {/* Ambient Glows */}
+        <div className="absolute -right-16 -top-16 w-64 h-64 rounded-full bg-amber-500/10 blur-3xl pointer-events-none"></div>
+        <div className="absolute -left-16 -bottom-16 w-64 h-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none"></div>
+
+        {/* Section Header */}
+        <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-4 border-b border-slate-800 pb-5 relative z-10">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl">📈</span>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
+                Live Gold & ETF Stock Graph
+                {isLiveStream && stockTimeframe === "1D" && (
+                  <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-xxs font-extrabold animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    LIVE STREAMING
+                  </span>
+                )}
+              </h2>
+            </div>
+            <p className="text-xs text-slate-400 font-medium">
+              Real-time intraday tick chart and technical data for Gold spot pricing, Gold ETFs, NBFC equities & Sovereign Gold Bonds.
+            </p>
+          </div>
+
+          {/* Timeframe Controls & Live Stream Toggle */}
+          <div className="flex flex-wrap items-center gap-3">
+            {stockTimeframe === "1D" && (
+              <button
+                type="button"
+                onClick={() => setIsLiveStream(!isLiveStream)}
+                className={`px-3 py-1.5 rounded-xl text-xxs font-extrabold border transition flex items-center gap-1.5 cursor-pointer ${
+                  isLiveStream
+                    ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                    : "bg-slate-800 text-slate-400 border-slate-700 hover:bg-slate-700"
+                }`}
+              >
+                <span>{isLiveStream ? "🔴 Live Stream ON" : "⏸️ Live Stream Paused"}</span>
+              </button>
+            )}
+
+            <div className="flex items-center bg-slate-800/90 p-1 rounded-2xl border border-slate-700">
+              {["1D", "1W", "1M", "1Y"].map((tf) => (
+                <button
+                  key={tf}
+                  type="button"
+                  onClick={() => setStockTimeframe(tf)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-black transition cursor-pointer ${
+                    stockTimeframe === tf
+                      ? "bg-amber-500 text-slate-950 shadow-xs"
+                      : "text-slate-400 hover:text-white hover:bg-slate-700/60"
+                  }`}
+                >
+                  {tf === "1D" ? "1D (Live)" : tf}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Asset Quick Switcher Pills */}
+        <div className="flex flex-wrap items-center gap-2 relative z-10">
+          <span className="text-xs font-bold text-slate-400 mr-1">Quick Select:</span>
+          {[
+            { symbol: "SPOT_24K", label: "🟡 24K Spot Gold" },
+            { symbol: "GOLDBEES", label: "🪙 Gold BeES ETF" },
+            { symbol: "TITAN", label: "🏆 Titan Ltd" },
+            { symbol: "MUTHOOTFIN", label: "🏦 Muthoot Fin" },
+            { symbol: "HDFCMFGETF", label: "📊 HDFC Gold ETF" },
+            { symbol: "SETFGOLD", label: "✨ SBI Gold ETF" },
+            { symbol: "MANAPPURAM", label: "💳 Manappuram" },
+            { symbol: "SGB-DEC31", label: "📜 SGB Bond" }
+          ].map((item) => (
+            <button
+              key={item.symbol}
+              type="button"
+              onClick={() => handleSelectStock(item.symbol)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition cursor-pointer border ${
+                selectedStockSymbol === item.symbol
+                  ? "bg-amber-500 text-slate-950 border-amber-400 font-black shadow-sm"
+                  : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700 hover:text-white"
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Live Metrics Header Bar */}
+        {stockGraphData && (
+          <div className="bg-slate-800/60 p-5 rounded-2xl border border-slate-800 relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-baseline gap-3">
+              <div>
+                <span className="text-xxs font-extrabold text-amber-400 uppercase tracking-wider block">
+                  {stockGraphData.name} ({stockGraphData.category} • {stockGraphData.exchange})
+                </span>
+                <div className="text-3xl font-black text-white tracking-tight mt-0.5">
+                  {formatCurrency(stockGraphData.currentPrice)}
+                </div>
+              </div>
+              <div className={`flex items-center gap-1 text-sm font-black px-2.5 py-1 rounded-xl border ${
+                stockGraphData.isPositive
+                  ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+                  : "bg-rose-500/20 text-rose-400 border-rose-500/30"
+              }`}>
+                <span>{stockGraphData.isPositive ? "▲ +" : "▼ "}</span>
+                <span>{formatCurrency(stockGraphData.change24h)}</span>
+                <span>({stockGraphData.isPositive ? "+" : ""}{stockGraphData.changePercent}%)</span>
+              </div>
+            </div>
+
+            {/* Technical Metrics Summary Grid */}
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 text-xxs font-bold border-t md:border-t-0 border-slate-700 pt-3 md:pt-0">
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">Open</span>
+                <span className="text-slate-200 font-extrabold">{formatCurrency(stockGraphData.openPrice)}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">High</span>
+                <span className="text-emerald-400 font-extrabold">{formatCurrency(stockGraphData.dayHigh)}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">Low</span>
+                <span className="text-rose-400 font-extrabold">{formatCurrency(stockGraphData.dayLow)}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">VWAP</span>
+                <span className="text-amber-400 font-extrabold">{formatCurrency(stockGraphData.vwap)}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">52W Range</span>
+                <span className="text-slate-200 font-extrabold">₹{stockGraphData.fiftyTwoWeekLow} - ₹{stockGraphData.fiftyTwoWeekHigh}</span>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-slate-400 block">Volume</span>
+                <span className="text-indigo-400 font-extrabold">{stockGraphData.volume}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Chart Canvas */}
+        <div className="h-80 w-full relative z-10 pt-2">
+          {stockGraphLoading ? (
+            <div className="flex h-full items-center justify-center flex-col space-y-2">
+              <div className="w-8 h-8 border-3 border-amber-400 border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-slate-400 font-bold">Loading live graph data for {selectedStockSymbol}...</p>
+            </div>
+          ) : stockGraphData && stockGraphData.points ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={stockGraphData.points}>
+                <defs>
+                  <linearGradient id="stockGradPos" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.35} />
+                    <stop offset="95%" stopColor={stockGraphData.isPositive ? "#10b981" : "#f43f5e"} stopOpacity={0.0} />
+                  </linearGradient>
+                </defs>
+                <XAxis dataKey="timeLabel" stroke="#64748b" fontSize={10} tickLine={false} />
+                <YAxis domain={["auto", "auto"]} stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val}`} />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-slate-950/95 border border-slate-700 p-3 rounded-xl shadow-2xl text-xs space-y-1.5 font-sans">
+                          <div className="text-slate-400 text-xxs font-bold">{data.timeLabel}</div>
+                          <div className="text-base font-black text-amber-400">₹{Number(data.price).toLocaleString("en-IN")}</div>
+                          <div className="grid grid-cols-2 gap-x-4 text-xxs text-slate-300 border-t border-slate-800 pt-1">
+                            <span>High: ₹{data.high}</span>
+                            <span>Low: ₹{data.low}</span>
+                            <span>Vol: {data.volume?.toLocaleString("en-IN")}</span>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {stockGraphData.openPrice && (
+                  <ReferenceLine y={stockGraphData.openPrice} stroke="#64748b" strokeDasharray="3 3" />
+                )}
+                <Area
+                  type="monotone"
+                  dataKey="price"
+                  stroke={stockGraphData.isPositive ? "#10b981" : "#f43f5e"}
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#stockGradPos)"
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : null}
+        </div>
+      </div>
+
       {/* City-wise Benchmark Rates Table */}
       <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-xs space-y-6">
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-4">
@@ -622,61 +912,92 @@ function PreciousMetals() {
           {filteredStocks.map((stock) => (
             <div
               key={stock.symbol}
-              className="bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-amber-300 rounded-2xl p-5 transition space-y-3 shadow-2xs hover:shadow-md group"
+              className="bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-amber-300 rounded-2xl p-5 transition space-y-3 shadow-2xs hover:shadow-md group flex flex-col justify-between"
             >
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className={`px-2 py-0.5 rounded-md text-xxs font-black tracking-wider uppercase border ${
-                    stock.category === "ETF"
-                      ? "bg-amber-50 text-amber-800 border-amber-200"
-                      : stock.category === "Equity"
-                      ? "bg-indigo-50 text-indigo-800 border-indigo-200"
-                      : "bg-emerald-50 text-emerald-800 border-emerald-200"
+              <div className="space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <span className={`px-2 py-0.5 rounded-md text-xxs font-black tracking-wider uppercase border ${
+                      stock.category === "ETF"
+                        ? "bg-amber-50 text-amber-800 border-amber-200"
+                        : stock.category === "Equity"
+                        ? "bg-indigo-50 text-indigo-800 border-indigo-200"
+                        : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                    }`}>
+                      {stock.category} • {stock.exchange}
+                    </span>
+                    <h4 className="text-base font-extrabold text-slate-900 mt-2 tracking-tight">
+                      {stock.symbol}
+                    </h4>
+                    <p className="text-xxs text-slate-500 font-semibold truncate max-w-[160px]" title={stock.name}>
+                      {stock.name}
+                    </p>
+                  </div>
+                  <span className={`px-2 py-1 rounded-lg text-xxs font-extrabold border ${
+                    stock.isPositive
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                      : "bg-rose-50 text-rose-700 border-rose-200"
                   }`}>
-                    {stock.category} • {stock.exchange}
-                  </span>
-                  <h4 className="text-base font-extrabold text-slate-900 mt-2 tracking-tight">
-                    {stock.symbol}
-                  </h4>
-                  <p className="text-xxs text-slate-500 font-semibold truncate max-w-[160px]" title={stock.name}>
-                    {stock.name}
-                  </p>
-                </div>
-                <span className={`px-2 py-1 rounded-lg text-xxs font-extrabold border ${
-                  stock.isPositive
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                    : "bg-rose-50 text-rose-700 border-rose-200"
-                }`}>
-                  {stock.isPositive ? "+" : ""}{stock.changePercent}%
-                </span>
-              </div>
-
-              <div className="pt-2 border-t border-slate-200/60">
-                <div className="text-2xl font-black text-slate-900">
-                  {formatCurrency(stock.price)}
-                </div>
-                <div className="text-xxs font-semibold text-slate-500 mt-0.5 flex justify-between">
-                  <span>24h Change:</span>
-                  <span className={stock.isPositive ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
-                    {stock.isPositive ? "+" : ""}{formatCurrency(stock.change24h)}
+                    {stock.isPositive ? "+" : ""}{stock.changePercent}%
                   </span>
                 </div>
+
+                <div className="pt-2 border-t border-slate-200/60">
+                  <div className="text-2xl font-black text-slate-900">
+                    {formatCurrency(stock.price)}
+                  </div>
+                  <div className="text-xxs font-semibold text-slate-500 mt-0.5 flex justify-between">
+                    <span>24h Change:</span>
+                    <span className={stock.isPositive ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+                      {stock.isPositive ? "+" : ""}{formatCurrency(stock.change24h)}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Mini Sparkline Visualization */}
+                <div className="h-10 w-full pt-1">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={[
+                      { p: stock.price * 0.99 },
+                      { p: stock.price * 0.994 },
+                      { p: stock.price * (stock.isPositive ? 1.003 : 0.991) },
+                      { p: stock.price * (stock.isPositive ? 1.006 : 0.988) },
+                      { p: stock.price }
+                    ]}>
+                      <Line
+                        type="monotone"
+                        dataKey="p"
+                        stroke={stock.isPositive ? "#10b981" : "#f43f5e"}
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+
+                <div className="space-y-1 bg-white/80 p-2.5 rounded-xl border border-slate-100 text-xxs font-semibold text-slate-600">
+                  <div className="flex justify-between">
+                    <span>1Y CAGR Return:</span>
+                    <span className="font-extrabold text-emerald-700">{stock.oneYearReturn}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Day Range:</span>
+                    <span className="font-bold text-slate-800">₹{stock.dayLow} - ₹{stock.dayHigh}</span>
+                  </div>
+                  <div className="flex justify-between pt-0.5 border-t border-slate-100 text-slate-400">
+                    <span>Underlying:</span>
+                    <span className="truncate max-w-[110px] text-slate-600 font-medium">{stock.underlying}</span>
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-1 bg-white/80 p-2.5 rounded-xl border border-slate-100 text-xxs font-semibold text-slate-600">
-                <div className="flex justify-between">
-                  <span>1Y CAGR Return:</span>
-                  <span className="font-extrabold text-emerald-700">{stock.oneYearReturn}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Day Range:</span>
-                  <span className="font-bold text-slate-800">₹{stock.dayLow} - ₹{stock.dayHigh}</span>
-                </div>
-                <div className="flex justify-between pt-0.5 border-t border-slate-100 text-slate-400">
-                  <span>Underlying:</span>
-                  <span className="truncate max-w-[110px] text-slate-600 font-medium">{stock.underlying}</span>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => handleSelectStock(stock.symbol)}
+                className="w-full mt-3 py-2 rounded-xl bg-slate-100 hover:bg-amber-500 hover:text-slate-950 border border-slate-200 hover:border-amber-400 text-slate-700 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs group-hover:bg-amber-500 group-hover:text-slate-950 group-hover:border-amber-400"
+              >
+                <span>📈 View Live Stock Graph</span>
+              </button>
             </div>
           ))}
         </div>

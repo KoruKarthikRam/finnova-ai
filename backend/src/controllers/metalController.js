@@ -63,8 +63,27 @@ const calculateMetalValue = async (req, res) => {
   }
 };
 
+/**
+ * Get detailed stock graph & time-series data for gold assets
+ */
+const getStockGraph = async (req, res) => {
+  try {
+    const { symbol = "GOLDBEES", timeframe = "1D" } = req.query;
+    const data = await metalService.getStockHistory(symbol, timeframe);
+    return res.json(data);
+  } catch (error) {
+    console.error("Error fetching stock graph:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch stock graph data",
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getLiveRates,
   getRateHistory,
-  calculateMetalValue
+  calculateMetalValue,
+  getStockGraph
 };
