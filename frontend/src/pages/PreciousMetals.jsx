@@ -865,9 +865,6 @@ function PreciousMetals() {
               Ratio: {goldSilverRatio} (Au/Ag)
             </div>
           </div>
-              Ratio: {goldSilverRatio} (Au/Ag)
-            </div>
-          </div>
 
           <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -1209,7 +1206,15 @@ function PreciousMetals() {
                   fillOpacity={1}
                   fill="url(#stockGradPos)"
                   activeDot={{ r: 6, fill: stockGraphData.isPositive ? "#059669" : "#e11d48", stroke: "#ffffff", strokeWidth: 2 }}
-                   {/* City-wise Benchmark Rates Table */}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : null}
+        </div>
+      </div>
+
+      {/* City-wise Benchmark Rates Table */}
       <div className={`rounded-3xl p-6 sm:p-8 border shadow-md space-y-6 ${theme.sectionCard}`}>
         <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-700/40 pb-4">
           <div>
@@ -1453,6 +1458,7 @@ function PreciousMetals() {
           >
             <span>Start Gold Investment on Groww</span>
             <span>↗</span>
+          </a>
         </div>
       </div>
     </div>
