@@ -94,6 +94,37 @@ ${citationsBlock}
 3. **Emergency Reserve**: Aim to maintain 3 to 6 months of essential living expenses (approx. ₹${(totalExpenses * 3).toLocaleString('en-IN')} to ₹${(totalExpenses * 6).toLocaleString('en-IN')}) in liquid savings.`;
   }
 
+  // 1.5 Topic: Investing in Gold / Groww Direct Link
+  if (query.includes("gold") || query.includes("groww") || query.includes("etf") || query.includes("sgb")) {
+    return `## 🪙 Investing in Gold & Gold ETFs via Groww
+
+Gold serves as a classic inflation hedge and portfolio stabilizer in Indian financial planning.
+
+---
+
+### 📊 Primary Options for Investing in Gold
+
+| Investment Vehicle | Typical Returns | Expense Ratio / Fees | Tax Efficiency | Recommended Platform |
+| :--- | :--- | :--- | :--- | :--- |
+| **Gold ETFs (e.g. Gold BeES)** | Tracks 24K Spot Gold (~12-18% 1Y) | Low (~0.12% - 0.5%) | Capital Gains Tax | [Invest Gold ETFs on Groww](https://groww.in/etfs/nippon-india-etf-gold-bees) |
+| **Digital Gold & Spot Gold** | Tracks Live Spot Price | 3% GST on Purchase | STCG / LTCG | [Buy Spot Gold on Groww](https://groww.in/gold) |
+| **Sovereign Gold Bonds (SGB)** | Spot Rate + 2.5% p.a. Fixed Interest | Zero | **Tax-Free on Maturity** | [Invest SGBs on Groww](https://groww.in/sgb) |
+
+---
+
+### 💡 Key Benefits of Digital Gold & Gold ETFs
+1. **Zero Storage & Security Costs**: Avoid locker charges and physical purity risks associated with jewelry.
+2. **Fractional Buying**: Start investing from as little as **₹100** in Gold ETFs via SIP or one-time orders.
+3. **High Liquidity**: Buy and sell instantly at live market spot rates during stock exchange hours.
+
+---
+
+### 🚀 Direct Groww Redirection
+You can directly start your Gold SIP, buy Gold BeES ETF units, or apply for SGB bonds directly on Groww:
+
+👉 [Click here to directly open Groww Gold Portal](https://groww.in/gold)`;
+  }
+
   // 2. Topic: Budgeting / 50-30-20 Rule
   if (query.includes("budget") || query.includes("50/30/20") || query.includes("50-30-20") || query.includes("spend")) {
     return `## 📐 The 50/30/20 Budgeting Rule: Complete Guide

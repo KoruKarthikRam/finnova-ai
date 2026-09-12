@@ -140,7 +140,8 @@ const cacheService = require("./cacheService");
         peRatio: "N/A (ETF)",
         oneYearReturn: "+18.4%",
         underlying: "1 Gram 99.5% Physical Gold",
-        volume: "2.4M"
+        volume: "2.4M",
+        growwUrl: "https://groww.in/etfs/nippon-india-etf-gold-bees"
       },
       {
         symbol: "HDFCMFGETF",
@@ -156,7 +157,8 @@ const cacheService = require("./cacheService");
         peRatio: "N/A (ETF)",
         oneYearReturn: "+18.2%",
         underlying: "Physical Bullion (99.5%)",
-        volume: "850K"
+        volume: "850K",
+        growwUrl: "https://groww.in/etfs/hdfc-gold-exchange-traded-fund"
       },
       {
         symbol: "SETFGOLD",
@@ -172,7 +174,8 @@ const cacheService = require("./cacheService");
         peRatio: "N/A (ETF)",
         oneYearReturn: "+18.1%",
         underlying: "Physical Bullion (99.5%)",
-        volume: "1.1M"
+        volume: "1.1M",
+        growwUrl: "https://groww.in/etfs/sbi-etf-gold"
       },
       {
         symbol: "KOTAKGOLD",
@@ -188,7 +191,8 @@ const cacheService = require("./cacheService");
         peRatio: "N/A (ETF)",
         oneYearReturn: "+17.9%",
         underlying: "Physical Bullion (99.5%)",
-        volume: "620K"
+        volume: "620K",
+        growwUrl: "https://groww.in/etfs/kotak-gold-etf"
       },
       {
         symbol: "TITAN",
@@ -204,7 +208,8 @@ const cacheService = require("./cacheService");
         peRatio: "82.4",
         oneYearReturn: "+24.6%",
         underlying: "Jewelry (Tanishq), Watch & Lifestyle",
-        volume: "1.8M"
+        volume: "1.8M",
+        growwUrl: "https://groww.in/stocks/titan-company-ltd"
       },
       {
         symbol: "MUTHOOTFIN",
@@ -220,7 +225,8 @@ const cacheService = require("./cacheService");
         peRatio: "16.8",
         oneYearReturn: "+32.1%",
         underlying: "India's Largest Gold Loan NBFC",
-        volume: "1.2M"
+        volume: "1.2M",
+        growwUrl: "https://groww.in/stocks/muthoot-finance-ltd"
       },
       {
         symbol: "MANAPPURAM",
@@ -236,7 +242,8 @@ const cacheService = require("./cacheService");
         peRatio: "8.6",
         oneYearReturn: "+21.5%",
         underlying: "Gold Loans & Microfinance",
-        volume: "3.5M"
+        volume: "3.5M",
+        growwUrl: "https://groww.in/stocks/manappuram-finance-ltd"
       },
       {
         symbol: "SGB-DEC31",
@@ -252,7 +259,8 @@ const cacheService = require("./cacheService");
         peRatio: "2.5% Fixed Interest",
         oneYearReturn: "+19.8% + 2.5% Interest",
         underlying: "Sovereign Guarantee (Govt of India)",
-        volume: "120K"
+        volume: "120K",
+        growwUrl: "https://groww.in/sgb"
       }
     ];
   }

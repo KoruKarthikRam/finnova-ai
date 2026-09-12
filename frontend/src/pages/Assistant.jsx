@@ -197,11 +197,11 @@ function Assistant() {
 
   // Suggestion list
   const suggestionChips = [
+    "How to invest in Gold on Groww?",
     "Where did I spend the most money this month?",
     "How can I improve my financial health score?",
     "What tax-saving options exist under Section 80C?",
     "Explain the difference between SIP and Mutual Fund.",
-    "Tell me how to start an emergency fund.",
   ];
 
   // Helper to parse and render rich markdown text safely
@@ -218,6 +218,12 @@ function Assistant() {
     html = html.replace(/```(?:[a-zA-Z]*)\n([\s\S]*?)```/g, (_, code) => {
       return `<pre class="bg-slate-100 border border-slate-200 text-slate-800 p-3 rounded-xl text-xs font-mono my-3 overflow-x-auto"><code>${code.trim()}</code></pre>`;
     });
+
+    // Markdown Links [text](url) -> <a href="url" target="_blank" rel="noopener noreferrer">text ↗</a>
+    html = html.replace(
+      /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,
+      '<a href="$2" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 font-bold text-emerald-600 hover:text-emerald-700 underline bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">$1 ↗</a>'
+    );
 
     // Horizontal rules (--- or ***)
     html = html.replace(/^---$/gm, '<hr class="my-4 border-slate-200" />');

@@ -15,6 +15,30 @@ import {
   CartesianGrid
 } from "recharts";
 
+const getGrowwGoldUrl = (symbol) => {
+  switch (symbol?.toUpperCase()) {
+    case "GOLDBEES":
+      return "https://groww.in/etfs/nippon-india-etf-gold-bees";
+    case "HDFCMFGETF":
+      return "https://groww.in/etfs/hdfc-gold-exchange-traded-fund";
+    case "SETFGOLD":
+      return "https://groww.in/etfs/sbi-etf-gold";
+    case "KOTAKGOLD":
+      return "https://groww.in/etfs/kotak-gold-etf";
+    case "TITAN":
+      return "https://groww.in/stocks/titan-company-ltd";
+    case "MUTHOOTFIN":
+      return "https://groww.in/stocks/muthoot-finance-ltd";
+    case "MANAPPURAM":
+      return "https://groww.in/stocks/manappuram-finance-ltd";
+    case "SGB-DEC31":
+    case "SGB":
+      return "https://groww.in/sgb";
+    default:
+      return "https://groww.in/gold";
+  }
+};
+
 function PreciousMetals() {
   const [ratesData, setRatesData] = useState(null);
   const [historyData, setHistoryData] = useState([]);
@@ -319,6 +343,16 @@ function PreciousMetals() {
               <span className={refreshing ? "animate-spin" : ""}>🔄</span>
               <span>{refreshing ? "Updating Market..." : "Refresh Feed"}</span>
             </button>
+
+            <a
+              href="https://groww.in/gold"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-4 py-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition shadow-lg shadow-emerald-500/20 flex items-center gap-2 cursor-pointer border border-emerald-300/60"
+            >
+              <span>⚡ Invest in Gold on Groww</span>
+              <span>↗</span>
+            </a>
           </div>
         </div>
       </div>
@@ -368,6 +402,16 @@ function PreciousMetals() {
             </span>
             <span className="text-slate-400 font-mono">Range: ₹{gold.dayRange.low} - ₹{gold.dayRange.high}</span>
           </div>
+
+          <a
+            href="https://groww.in/gold"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full mt-2 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md border border-emerald-300/40"
+          >
+            <span>Buy 24K Gold on Groww</span>
+            <span>↗</span>
+          </a>
         </div>
 
         {/* 22K Gold Card */}
@@ -640,7 +684,7 @@ function PreciousMetals() {
 
           {/* Calculator Output */}
           {calcResult && (
-            <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white space-y-2.5 shadow-lg border border-amber-500/30">
+            <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white space-y-3 shadow-lg border border-amber-500/30">
               <div className="flex justify-between items-center text-amber-300 text-xxs font-extrabold uppercase tracking-wider">
                 <span>Calculated Valuation</span>
                 <span>{calcResult.convertedGramWeight} grams ({calcResult.purity})</span>
@@ -652,6 +696,16 @@ function PreciousMetals() {
                 <span>Base Cost: {formatCurrency(calcResult.baseAmount)}</span>
                 <span>GST (3%): +{formatCurrency(calcResult.gstAmount)}</span>
               </div>
+
+              <a
+                href="https://groww.in/gold"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full pt-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md border border-emerald-300/50"
+              >
+                <span>Invest {formatCurrency(calcResult.totalAmount)} in Gold on Groww</span>
+                <span>↗</span>
+              </a>
             </div>
           )}
         </div>
@@ -1193,13 +1247,25 @@ function PreciousMetals() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => handleSelectStock(stock.symbol)}
-                className="w-full mt-3 py-2.5 rounded-xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md group-hover:bg-amber-500 group-hover:text-slate-950"
-              >
-                <span>📈 View Live Stock Graph</span>
-              </button>
+              <div className="mt-3 grid grid-cols-1 gap-2">
+                <a
+                  href={stock.growwUrl || getGrowwGoldUrl(stock.symbol)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md border border-emerald-300/40"
+                >
+                  <span>⚡ Invest on Groww</span>
+                  <span>↗</span>
+                </a>
+
+                <button
+                  type="button"
+                  onClick={() => handleSelectStock(stock.symbol)}
+                  className="w-full py-2 rounded-xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs group-hover:bg-amber-500 group-hover:text-slate-950"
+                >
+                  <span>📈 View Stock Graph</span>
+                </button>
+              </div>
             </div>
           ))}
         </div>
@@ -1224,6 +1290,19 @@ function PreciousMetals() {
             <span className="font-extrabold text-purple-800 block">🛡️ Inflation Protection</span>
             <p className="text-slate-600">Gold in INR has delivered an average annual CAGR of 9.5% over the past 20 years in India, consistently outperforming domestic consumer CPI inflation.</p>
           </div>
+        </div>
+
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center pt-3 border-t border-amber-200/40 gap-3">
+          <p className="text-xs font-bold text-slate-700">Ready to invest in Gold ETFs, Bullion, or SGBs?</p>
+          <a
+            href="https://groww.in/gold"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition shadow-md flex items-center justify-center gap-2 cursor-pointer border border-emerald-300/40"
+          >
+            <span>Start Gold Investment on Groww</span>
+            <span>↗</span>
+          </a>
         </div>
       </div>
 
