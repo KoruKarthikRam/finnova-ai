@@ -634,24 +634,29 @@ function PreciousMetals() {
               </div>
 
               {/* Weight & Unit */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block mb-1 text-slate-600">Weight Quantity:</label>
+              <div className="grid grid-cols-2 gap-3 min-w-0">
+                <div className="min-w-0">
+                  <label className="block mb-1 text-slate-600 truncate">Weight Quantity:</label>
                   <input
                     type="number"
                     min="0.1"
+                    max="10000000"
                     step="any"
                     value={calcWeight}
-                    onChange={(e) => setCalcWeight(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-black focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono"
+                    onChange={(e) => {
+                      let val = e.target.value;
+                      if (val.length > 9) val = val.slice(0, 9);
+                      setCalcWeight(val);
+                    }}
+                    className="w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-black focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono overflow-hidden truncate"
                   />
                 </div>
-                <div>
-                  <label className="block mb-1 text-slate-600">Unit Measurement:</label>
+                <div className="min-w-0">
+                  <label className="block mb-1 text-slate-600 truncate">Unit Measurement:</label>
                   <select
                     value={calcUnit}
                     onChange={(e) => setCalcUnit(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 truncate"
                   >
                     <option value="gram">Grams (g)</option>
                     <option value="sovereign">Sovereign / Pavan (8g)</option>
@@ -684,27 +689,29 @@ function PreciousMetals() {
 
           {/* Calculator Output */}
           {calcResult && (
-            <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white space-y-3 shadow-lg border border-amber-500/30">
-              <div className="flex justify-between items-center text-amber-300 text-xxs font-extrabold uppercase tracking-wider">
-                <span>Calculated Valuation</span>
-                <span>{calcResult.convertedGramWeight} grams ({calcResult.purity})</span>
+            <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white space-y-3 shadow-lg border border-amber-500/30 min-w-0 max-w-full overflow-hidden">
+              <div className="flex justify-between items-center text-amber-300 text-xxs font-extrabold uppercase tracking-wider min-w-0 gap-2">
+                <span className="shrink-0">Calculated Valuation</span>
+                <span className="truncate text-right font-mono" title={`${calcResult.convertedGramWeight} grams (${calcResult.purity})`}>
+                  {calcResult.convertedGramWeight.toLocaleString("en-IN")} grams ({calcResult.purity})
+                </span>
               </div>
-              <div className="text-3xl font-black text-amber-400 font-mono">
+              <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono truncate max-w-full overflow-hidden" title={formatCurrency(calcResult.totalAmount)}>
                 {formatCurrency(calcResult.totalAmount)}
               </div>
-              <div className="flex justify-between items-center text-xxs text-slate-300 pt-2 border-t border-slate-800 font-mono">
-                <span>Base Cost: {formatCurrency(calcResult.baseAmount)}</span>
-                <span>GST (3%): +{formatCurrency(calcResult.gstAmount)}</span>
+              <div className="flex justify-between items-center text-xxs text-slate-300 pt-2 border-t border-slate-800 font-mono min-w-0 gap-2 overflow-hidden">
+                <span className="truncate">Base Cost: {formatCurrency(calcResult.baseAmount)}</span>
+                <span className="truncate text-right">GST (3%): +{formatCurrency(calcResult.gstAmount)}</span>
               </div>
 
               <a
                 href="https://groww.in/gold"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full pt-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md border border-emerald-300/50"
+                className="w-full pt-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md border border-emerald-300/50 min-w-0 overflow-hidden"
               >
-                <span>Invest {formatCurrency(calcResult.totalAmount)} in Gold on Groww</span>
-                <span>↗</span>
+                <span className="truncate px-1">Invest {formatCurrency(calcResult.totalAmount)} in Gold on Groww</span>
+                <span className="shrink-0">↗</span>
               </a>
             </div>
           )}
