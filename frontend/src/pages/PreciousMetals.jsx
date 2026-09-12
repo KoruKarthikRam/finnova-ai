@@ -57,6 +57,10 @@ function PreciousMetals() {
   const [selectedCity, setSelectedCity] = useState("All");
   const [stockCategory, setStockCategory] = useState("All");
 
+  // Page Theme & Typography Style Customization State
+  const [pageTheme, setPageTheme] = useState("royal-gold"); // "royal-gold", "silver-platinum", "emerald-wealth", "ivory-light"
+  const [fontStyle, setFontStyle] = useState("cinzel"); // "cinzel", "space", "jakarta"
+
   // Live Stock Graph State
   const [selectedStockSymbol, setSelectedStockSymbol] = useState("GOLDBEES");
   const [stockTimeframe, setStockTimeframe] = useState("1D");
@@ -294,13 +298,84 @@ function PreciousMetals() {
   const filteredCities = selectedCity === "All" ? cities : cities.filter(c => c.city === selectedCity);
   const filteredStocks = (stocks || []).filter(s => stockCategory === "All" || s.category === stockCategory);
 
-  const isLight = graphTheme === "light";
+  const isLight = pageTheme === "ivory-light" || graphTheme === "light";
+
+  // Dynamic Theme & Typography Utilities
+  const headingFontClass = fontStyle === "cinzel" ? "font-cinzel" : fontStyle === "space" ? "font-space" : "font-sans font-black";
+  const numFontClass = "font-mono-wealth";
+
+  const getThemeStyles = () => {
+    switch (pageTheme) {
+      case "silver-platinum":
+        return {
+          bg: "bg-slate-950 text-white",
+          banner: "bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 border-slate-400/40 shadow-2xl glow-silver",
+          bannerAccent: "text-slate-200 shimmer-silver-text",
+          card: "bg-gradient-to-br from-slate-900/90 via-slate-800/50 to-slate-950 border-slate-600/60 text-white shadow-xl hover:border-slate-300 backdrop-blur-md",
+          sectionCard: "bg-slate-900/95 border-slate-800 text-white shadow-xl backdrop-blur-xl",
+          textAccent: "text-slate-200",
+          badge: "bg-slate-800 text-slate-200 border-slate-700",
+          input: "bg-slate-950 border-slate-700 text-white focus:ring-slate-400",
+          tableRowHover: "hover:bg-slate-800/60",
+          textMuted: "text-slate-400",
+          textPrimary: "text-white"
+        };
+      case "emerald-wealth":
+        return {
+          bg: "bg-slate-950 text-white",
+          banner: "bg-gradient-to-r from-slate-950 via-emerald-950/60 to-slate-950 border-emerald-500/40 shadow-2xl glow-emerald",
+          bannerAccent: "text-emerald-400 font-extrabold",
+          card: "bg-gradient-to-br from-slate-900/90 via-emerald-950/40 to-slate-950 border-emerald-500/30 text-white shadow-xl hover:border-emerald-400 backdrop-blur-md",
+          sectionCard: "bg-slate-900/95 border-slate-800 text-white shadow-xl backdrop-blur-xl",
+          textAccent: "text-emerald-400",
+          badge: "bg-emerald-500/20 text-emerald-300 border-emerald-500/30",
+          input: "bg-slate-950 border-slate-700 text-white focus:ring-emerald-500",
+          tableRowHover: "hover:bg-emerald-950/40",
+          textMuted: "text-slate-400",
+          textPrimary: "text-white"
+        };
+      case "ivory-light":
+        return {
+          bg: "bg-slate-100 text-slate-900",
+          banner: "bg-gradient-to-r from-amber-500 via-amber-600 to-amber-700 border-amber-400 shadow-xl text-slate-950",
+          bannerAccent: "text-slate-950 font-black",
+          card: "bg-white/95 border-slate-200/90 text-slate-900 shadow-md hover:border-amber-400 backdrop-blur-md",
+          sectionCard: "bg-white/95 border-slate-200/90 text-slate-900 shadow-md",
+          textAccent: "text-amber-800 font-black",
+          badge: "bg-amber-100 text-amber-900 border-amber-300",
+          input: "bg-white border-slate-200 text-slate-900 focus:ring-amber-500",
+          tableRowHover: "hover:bg-amber-50/60",
+          textMuted: "text-slate-500",
+          textPrimary: "text-slate-900"
+        };
+      case "royal-gold":
+      default:
+        return {
+          bg: "bg-slate-950 text-white",
+          banner: "bg-gradient-to-r from-slate-950 via-amber-950/60 to-slate-950 border-amber-500/40 shadow-2xl glow-gold",
+          bannerAccent: "text-amber-400 shimmer-gold-text",
+          card: "bg-gradient-to-br from-slate-900/90 via-amber-950/30 to-slate-950 border-amber-500/30 text-white shadow-xl hover:border-amber-400 backdrop-blur-md",
+          sectionCard: "bg-slate-900/95 border-slate-800 text-white shadow-xl backdrop-blur-xl",
+          textAccent: "text-amber-400",
+          badge: "bg-amber-500/20 text-amber-300 border-amber-500/30",
+          input: "bg-slate-950 border-slate-700 text-white focus:ring-amber-500",
+          tableRowHover: "hover:bg-amber-950/40",
+          textMuted: "text-slate-400",
+          textPrimary: "text-white"
+        };
+    }
+  };
+
+  const theme = getThemeStyles();
 
   return (
-    <div className="max-w-7xl mx-auto space-y-8 pb-16 relative px-4 sm:px-6 font-sans">
+    <div className={`min-h-screen transition-colors duration-500 py-6 px-4 sm:px-6 relative ${theme.bg}`}>
+      <div className={`max-w-7xl mx-auto space-y-8 pb-16 relative ${
+        fontStyle === "cinzel" ? "font-outfit" : fontStyle === "space" ? "font-space" : "font-sans"
+      }`}>
       
-      {/* Premium Glassmorphic Header Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-950 via-amber-950/40 to-slate-950 p-6 sm:p-8 border border-amber-500/30 shadow-2xl text-white backdrop-blur-xl">
+      {/* Dynamic Theme & Font Glassmorphic Header Banner */}
+      <div className={`relative overflow-hidden rounded-3xl p-6 sm:p-8 border shadow-2xl backdrop-blur-xl transition-all duration-500 ${theme.banner} space-y-6`}>
         <div className="absolute -top-24 -right-24 w-96 h-96 bg-amber-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute -bottom-24 -left-24 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
@@ -311,10 +386,10 @@ function PreciousMetals() {
                 🪙
               </span>
               <div>
-                <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
-                  Live Gold & Silver Bullion Hub <span className="text-amber-400 font-extrabold text-lg font-mono">(INR ₹)</span>
+                <h1 className={`text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 ${headingFontClass} ${pageTheme === "ivory-light" ? "text-slate-950" : "text-white"}`}>
+                  Live Gold & Silver Bullion Hub <span className={`text-lg ${numFontClass} ${theme.bannerAccent}`}>(INR ₹)</span>
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-300 font-medium mt-0.5">
+                <p className={`text-xs sm:text-sm font-medium mt-0.5 ${pageTheme === "ivory-light" ? "text-amber-950/80" : "text-slate-300"}`}>
                   Real-time Indian spot pricing for 24K, 22K, 18K Gold, Fine Silver, Gold ETFs & sharp vector stock graphs.
                 </p>
               </div>
@@ -331,7 +406,7 @@ function PreciousMetals() {
               SPOT MARKET ACTIVE
             </div>
 
-            <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xxs font-extrabold font-mono">
+            <div className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xxs font-extrabold ${numFontClass} ${theme.badge}`}>
               Au/Ag Ratio: {goldSilverRatio}
             </div>
 
@@ -353,6 +428,64 @@ function PreciousMetals() {
               <span>⚡ Invest in Gold on Groww</span>
               <span>↗</span>
             </a>
+          </div>
+        </div>
+
+        {/* Live Theme & Font Customization Toolbar */}
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-4 border-t border-white/10 text-xs font-bold">
+          {/* Theme Selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`font-extrabold flex items-center gap-1.5 shrink-0 ${pageTheme === "ivory-light" ? "text-slate-950" : "text-amber-300"}`}>
+              🎨 Page Theme:
+            </span>
+            <div className="flex flex-wrap items-center gap-1 bg-slate-900/80 p-1 rounded-2xl border border-slate-700/80">
+              {[
+                { id: "royal-gold", label: "👑 Royal 24K Gold", activeClass: "bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black shadow-md" },
+                { id: "silver-platinum", label: "⚪ Silver Platinum", activeClass: "bg-gradient-to-r from-slate-300 to-slate-400 text-slate-950 font-black shadow-md" },
+                { id: "emerald-wealth", label: "💎 Emerald Wealth", activeClass: "bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 font-black shadow-md" },
+                { id: "ivory-light", label: "☀️ Ivory Light", activeClass: "bg-white text-slate-950 font-black shadow-md" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setPageTheme(t.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xxs transition cursor-pointer ${
+                    pageTheme === t.id
+                      ? t.activeClass
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                  }`}
+                >
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Font Style Selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`font-extrabold flex items-center gap-1.5 shrink-0 ${pageTheme === "ivory-light" ? "text-slate-950" : "text-amber-300"}`}>
+              ✍️ Typography Style:
+            </span>
+            <div className="flex flex-wrap items-center gap-1 bg-slate-900/80 p-1 rounded-2xl border border-slate-700/80">
+              {[
+                { id: "cinzel", label: "🏛️ Royal Serif", fontClass: "font-cinzel" },
+                { id: "space", label: "⚡ Cyber Finance", fontClass: "font-space" },
+                { id: "jakarta", label: "✨ Modern Editorial", fontClass: "font-sans" },
+              ].map((f) => (
+                <button
+                  key={f.id}
+                  type="button"
+                  onClick={() => setFontStyle(f.id)}
+                  className={`px-3 py-1.5 rounded-xl text-xxs transition cursor-pointer ${f.fontClass} ${
+                    fontStyle === f.id
+                      ? "bg-amber-500 text-slate-950 font-black shadow-md"
+                      : "text-slate-300 hover:text-white hover:bg-slate-800/80"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -549,30 +682,30 @@ function PreciousMetals() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* Bullion Value Calculator (Enhanced UI with presets) */}
-        <div className="lg:col-span-5 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-md space-y-6 flex flex-col justify-between">
+        <div className={`lg:col-span-5 rounded-3xl p-6 sm:p-7 border shadow-md space-y-6 flex flex-col justify-between ${theme.sectionCard}`}>
           <div className="space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div className="flex items-center justify-between border-b border-slate-700/40 pb-3">
               <div className="flex items-center gap-2">
                 <span className="text-xl">🧮</span>
-                <h3 className="text-base font-extrabold text-slate-900">Indian Bullion Calculator</h3>
+                <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>Indian Bullion Calculator</h3>
               </div>
-              <span className="text-xxs font-extrabold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className={`text-xxs font-extrabold px-2.5 py-1 rounded-full border ${theme.badge}`}>
                 Live Valuation
               </span>
             </div>
 
             {/* Metal Selection */}
-            <div className="space-y-3 text-xs font-bold text-slate-700">
+            <div className="space-y-3 text-xs font-bold">
               <div>
-                <label className="block mb-1.5 text-slate-600">Select Commodity Metal:</label>
+                <label className={`block mb-1.5 ${theme.textMuted}`}>Select Commodity Metal:</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setCalcMetal("gold")}
                     className={`py-2.5 rounded-xl border text-xs font-black transition cursor-pointer ${
                       calcMetal === "gold"
-                        ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        ? "bg-amber-500 text-slate-950 border-amber-400 shadow-md font-black"
+                        : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                     }`}
                   >
                     🟡 Gold
@@ -582,8 +715,8 @@ function PreciousMetals() {
                     onClick={() => setCalcMetal("silver")}
                     className={`py-2.5 rounded-xl border text-xs font-black transition cursor-pointer ${
                       calcMetal === "silver"
-                        ? "bg-slate-800 text-white border-slate-900 shadow-md"
-                        : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100"
+                        ? "bg-slate-300 text-slate-950 border-slate-400 shadow-md font-black"
+                        : "bg-slate-800/80 text-slate-300 border-slate-700 hover:bg-slate-700"
                     }`}
                   >
                     ⚪ Silver
@@ -594,11 +727,11 @@ function PreciousMetals() {
               {/* Purity (Gold only) */}
               {calcMetal === "gold" && (
                 <div>
-                  <label className="block mb-1 text-slate-600">Gold Purity Grade:</label>
+                  <label className={`block mb-1 ${theme.textMuted}`}>Gold Purity Grade:</label>
                   <select
                     value={calcPurity}
                     onChange={(e) => setCalcPurity(e.target.value)}
-                    className="w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-extrabold focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className={`w-full px-3 py-2.5 rounded-xl border font-extrabold focus:outline-none focus:ring-2 ${theme.input}`}
                   >
                     <option value="24K">24K Gold (99.9% Fine Bullion)</option>
                     <option value="22K">22K Gold (91.6% Jewelry Standard)</option>
@@ -609,7 +742,7 @@ function PreciousMetals() {
 
               {/* Quick Preset Weight Chips */}
               <div>
-                <label className="block mb-1 text-slate-600">Quick Quantity Presets:</label>
+                <label className={`block mb-1 ${theme.textMuted}`}>Quick Quantity Presets:</label>
                 <div className="flex flex-wrap gap-1.5">
                   {[
                     { label: "1g", weight: 1, unit: "gram" },
@@ -625,7 +758,7 @@ function PreciousMetals() {
                         setCalcWeight(preset.weight);
                         setCalcUnit(preset.unit);
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-900 text-xxs font-extrabold transition cursor-pointer"
+                      className={`px-2.5 py-1 rounded-lg border text-xxs font-extrabold transition cursor-pointer ${theme.badge}`}
                     >
                       {preset.label}
                     </button>
@@ -636,7 +769,7 @@ function PreciousMetals() {
               {/* Weight & Unit */}
               <div className="grid grid-cols-2 gap-3 min-w-0">
                 <div className="min-w-0">
-                  <label className="block mb-1 text-slate-600 truncate">Weight Quantity:</label>
+                  <label className={`block mb-1 truncate ${theme.textMuted}`}>Weight Quantity:</label>
                   <input
                     type="number"
                     min="0.1"
@@ -648,15 +781,15 @@ function PreciousMetals() {
                       if (val.length > 9) val = val.slice(0, 9);
                       setCalcWeight(val);
                     }}
-                    className="w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-black focus:outline-none focus:ring-2 focus:ring-amber-500 font-mono overflow-hidden truncate"
+                    className={`w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border font-black focus:outline-none focus:ring-2 ${numFontClass} overflow-hidden truncate ${theme.input}`}
                   />
                 </div>
                 <div className="min-w-0">
-                  <label className="block mb-1 text-slate-600 truncate">Unit Measurement:</label>
+                  <label className={`block mb-1 truncate ${theme.textMuted}`}>Unit Measurement:</label>
                   <select
                     value={calcUnit}
                     onChange={(e) => setCalcUnit(e.target.value)}
-                    className="w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 truncate"
+                    className={`w-full min-w-0 max-w-full px-3 py-2.5 rounded-xl border font-bold focus:outline-none focus:ring-2 truncate ${theme.input}`}
                   >
                     <option value="gram">Grams (g)</option>
                     <option value="sovereign">Sovereign / Pavan (8g)</option>
@@ -669,12 +802,12 @@ function PreciousMetals() {
 
               {/* GST Toggle */}
               <div className="flex items-center justify-between pt-1">
-                <span className="text-slate-600 font-semibold">Include 3% Indian GST:</span>
+                <span className={`font-semibold ${theme.textMuted}`}>Include 3% Indian GST:</span>
                 <button
                   type="button"
                   onClick={() => setCalcIncludeGst(!calcIncludeGst)}
                   className={`w-12 h-6 rounded-full p-1 transition duration-200 cursor-pointer ${
-                    calcIncludeGst ? "bg-amber-500" : "bg-slate-300"
+                    calcIncludeGst ? "bg-amber-500" : "bg-slate-600"
                   }`}
                 >
                   <div
@@ -689,17 +822,21 @@ function PreciousMetals() {
 
           {/* Calculator Output */}
           {calcResult && (
-            <div className="mt-4 p-5 rounded-2xl bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white space-y-3 shadow-lg border border-amber-500/30 min-w-0 max-w-full overflow-hidden">
+            <div className={`mt-4 p-5 rounded-2xl space-y-3 shadow-lg border min-w-0 max-w-full overflow-hidden ${
+              pageTheme === "ivory-light"
+                ? "bg-gradient-to-br from-slate-900 via-amber-950 to-slate-900 text-white border-amber-500/30"
+                : "bg-slate-950/80 border-amber-500/40 text-white"
+            }`}>
               <div className="flex justify-between items-center text-amber-300 text-xxs font-extrabold uppercase tracking-wider min-w-0 gap-2">
                 <span className="shrink-0">Calculated Valuation</span>
-                <span className="truncate text-right font-mono" title={`${calcResult.convertedGramWeight} grams (${calcResult.purity})`}>
+                <span className={`truncate text-right ${numFontClass}`} title={`${calcResult.convertedGramWeight} grams (${calcResult.purity})`}>
                   {calcResult.convertedGramWeight.toLocaleString("en-IN")} grams ({calcResult.purity})
                 </span>
               </div>
-              <div className="text-2xl sm:text-3xl font-black text-amber-400 font-mono truncate max-w-full overflow-hidden" title={formatCurrency(calcResult.totalAmount)}>
+              <div className={`text-2xl sm:text-3xl font-black text-amber-400 truncate max-w-full overflow-hidden ${numFontClass}`} title={formatCurrency(calcResult.totalAmount)}>
                 {formatCurrency(calcResult.totalAmount)}
               </div>
-              <div className="flex justify-between items-center text-xxs text-slate-300 pt-2 border-t border-slate-800 font-mono min-w-0 gap-2 overflow-hidden">
+              <div className={`flex justify-between items-center text-xxs text-slate-300 pt-2 border-t border-slate-800 min-w-0 gap-2 overflow-hidden ${numFontClass}`}>
                 <span className="truncate">Base Cost: {formatCurrency(calcResult.baseAmount)}</span>
                 <span className="truncate text-right">GST (3%): +{formatCurrency(calcResult.gstAmount)}</span>
               </div>
@@ -718,13 +855,16 @@ function PreciousMetals() {
         </div>
 
         {/* 7-Day Spot Price Trend Chart */}
-        <div className="lg:col-span-7 bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-md space-y-4 flex flex-col justify-between">
-          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div className={`lg:col-span-7 rounded-3xl p-6 sm:p-7 border shadow-md space-y-4 flex flex-col justify-between ${theme.sectionCard}`}>
+          <div className="flex justify-between items-center border-b border-slate-700/40 pb-3">
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">7-Day Gold Spot Trend (₹ / Gram 24K)</h3>
-              <p className="text-xs text-slate-500">Intraday spot market sharp vector price trajectory</p>
+              <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>7-Day Gold Spot Trend (₹ / Gram 24K)</h3>
+              <p className={`text-xs ${theme.textMuted}`}>Intraday spot market sharp vector price trajectory</p>
             </div>
-            <div className="text-xs font-extrabold text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200 font-mono">
+            <div className={`text-xs font-extrabold px-3 py-1 rounded-full border ${numFontClass} ${theme.badge}`}>
+              Ratio: {goldSilverRatio} (Au/Ag)
+            </div>
+          </div>
               Ratio: {goldSilverRatio} (Au/Ag)
             </div>
           </div>
@@ -1069,33 +1209,25 @@ function PreciousMetals() {
                   fillOpacity={1}
                   fill="url(#stockGradPos)"
                   activeDot={{ r: 6, fill: stockGraphData.isPositive ? "#059669" : "#e11d48", stroke: "#ffffff", strokeWidth: 2 }}
-                  isAnimationActive={false}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          ) : null}
-        </div>
-      </div>
-
-      {/* City-wise Benchmark Rates Table */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md space-y-6 font-sans">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-100 pb-4">
+                   {/* City-wise Benchmark Rates Table */}
+      <div className={`rounded-3xl p-6 sm:p-8 border shadow-md space-y-6 ${theme.sectionCard}`}>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-700/40 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">🏙️</span>
-              <h3 className="text-base font-extrabold text-slate-900">City-wise Gold & Silver Benchmark Rates</h3>
+              <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>City-wise Gold & Silver Benchmark Rates</h3>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
+            <p className={`text-xs mt-0.5 ${theme.textMuted}`}>
               Standard local market pricing per 10 grams (Gold) and 1 KG (Silver) incorporating regional duties.
             </p>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-slate-600">Filter City Hub:</span>
+            <span className={`text-xs font-bold ${theme.textMuted}`}>Filter City Hub:</span>
             <select
               value={selectedCity}
               onChange={(e) => setSelectedCity(e.target.value)}
-              className="px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-extrabold bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className={`px-3.5 py-2 rounded-xl border text-xs font-extrabold focus:outline-none focus:ring-2 ${theme.input}`}
             >
               <option value="All">All Major Cities</option>
               {cities.map((c) => (
@@ -1106,9 +1238,9 @@ function PreciousMetals() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-semibold text-slate-700">
+          <table className="w-full text-left text-xs font-semibold">
             <thead>
-              <tr className="border-b border-slate-200 text-slate-400 uppercase text-xxs tracking-wider font-sans">
+              <tr className={`border-b border-slate-700/60 uppercase text-xxs tracking-wider ${theme.textMuted}`}>
                 <th className="py-3 px-4">City Hub</th>
                 <th className="py-3 px-4">24K Gold (10g)</th>
                 <th className="py-3 px-4">22K Gold (10g)</th>
@@ -1116,18 +1248,18 @@ function PreciousMetals() {
                 <th className="py-3 px-4 text-right">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-slate-800/40">
               {filteredCities.map((c) => (
-                <tr key={c.city} className="hover:bg-amber-50/40 transition">
-                  <td className="py-3.5 px-4 font-black text-slate-900 flex items-center gap-2">
+                <tr key={c.city} className={`transition ${theme.tableRowHover}`}>
+                  <td className={`py-3.5 px-4 font-black flex items-center gap-2 ${theme.textPrimary}`}>
                     <span className="w-2 h-2 rounded-full bg-amber-500"></span>
                     {c.city}
                   </td>
-                  <td className="py-3.5 px-4 font-black text-amber-700 font-mono">{formatCurrency(c.gold24kPer10g)}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-800 font-mono">{formatCurrency(c.gold22kPer10g)}</td>
-                  <td className="py-3.5 px-4 font-bold text-slate-800 font-mono">{formatCurrency(c.silverPerKg)}</td>
+                  <td className={`py-3.5 px-4 font-black ${numFontClass} ${theme.textAccent}`}>{formatCurrency(c.gold24kPer10g)}</td>
+                  <td className={`py-3.5 px-4 font-bold ${numFontClass} ${theme.textPrimary}`}>{formatCurrency(c.gold22kPer10g)}</td>
+                  <td className={`py-3.5 px-4 font-bold ${numFontClass} ${theme.textPrimary}`}>{formatCurrency(c.silverPerKg)}</td>
                   <td className="py-3.5 px-4 text-right">
-                    <span className="px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xxs font-extrabold border border-emerald-100 font-mono">
+                    <span className={`px-2.5 py-1 rounded-full text-xxs font-extrabold border ${numFontClass} ${theme.badge}`}>
                       Active Spot
                     </span>
                   </td>
@@ -1139,20 +1271,20 @@ function PreciousMetals() {
       </div>
 
       {/* Live Gold ETFs & Gold-Linked Stocks Tracker */}
-      <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200/80 shadow-md space-y-6 font-sans">
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-100 pb-4">
+      <div className={`rounded-3xl p-6 sm:p-8 border shadow-md space-y-6 ${theme.sectionCard}`}>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-700/40 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-2xl">📈</span>
-              <h3 className="text-lg font-black text-slate-900">Live Gold ETFs & Gold-Linked Stocks</h3>
+              <h3 className={`text-lg font-black ${headingFontClass} ${theme.textPrimary}`}>Live Gold ETFs & Gold-Linked Stocks</h3>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5 font-medium">
+            <p className={`text-xs mt-0.5 font-medium ${theme.textMuted}`}>
               Real-time NSE/BSE spot tracking for Gold Exchange Traded Funds (ETFs), Gold Mining & NBFC Equities, and Sovereign Gold Bonds (SGBs).
             </p>
           </div>
 
           {/* Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1 rounded-2xl border border-slate-200 text-xs font-bold">
+          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950/60 p-1 rounded-2xl border border-slate-700/80 text-xs font-bold">
             {["All", "ETF", "Equity", "SGB"].map((cat) => (
               <button
                 key={cat}
@@ -1161,7 +1293,7 @@ function PreciousMetals() {
                 className={`px-3.5 py-1.5 rounded-xl transition cursor-pointer ${
                   stockCategory === cat
                     ? "bg-amber-500 text-slate-950 font-black shadow-xs"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                    : "text-slate-300 hover:text-white hover:bg-slate-800/80"
                 }`}
               >
                 {cat === "All" ? "All Assets" : cat === "ETF" ? "Gold ETFs" : cat === "Equity" ? "Gold Equities" : "SGB Bonds"}
@@ -1175,43 +1307,47 @@ function PreciousMetals() {
           {filteredStocks.map((stock) => (
             <div
               key={stock.symbol}
-              className="bg-slate-50/70 hover:bg-white border border-slate-200/80 hover:border-amber-400 rounded-2xl p-5 transition-all duration-300 space-y-3 shadow-2xs hover:shadow-lg group flex flex-col justify-between"
+              className={`rounded-2xl p-5 transition-all duration-300 space-y-3 shadow-2xs hover:shadow-lg group flex flex-col justify-between border ${
+                pageTheme === "ivory-light"
+                  ? "bg-slate-50 hover:bg-white border-slate-200 hover:border-amber-400 text-slate-900"
+                  : "bg-slate-950/60 hover:bg-slate-900 border-slate-800 hover:border-amber-500/60 text-white"
+              }`}
             >
               <div className="space-y-3">
                 <div className="flex justify-between items-start">
                   <div>
                     <span className={`px-2 py-0.5 rounded-md text-xxs font-black tracking-wider uppercase border ${
                       stock.category === "ETF"
-                        ? "bg-amber-50 text-amber-800 border-amber-200"
+                        ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
                         : stock.category === "Equity"
-                        ? "bg-indigo-50 text-indigo-800 border-indigo-200"
-                        : "bg-emerald-50 text-emerald-800 border-emerald-200"
+                        ? "bg-indigo-500/20 text-indigo-300 border-indigo-500/40"
+                        : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
                     }`}>
                       {stock.category} • {stock.exchange}
                     </span>
-                    <h4 className="text-base font-black text-slate-900 mt-2 tracking-tight">
+                    <h4 className={`text-base font-black mt-2 tracking-tight ${headingFontClass} ${theme.textPrimary}`}>
                       {stock.symbol}
                     </h4>
-                    <p className="text-xxs text-slate-500 font-semibold truncate max-w-[160px]" title={stock.name}>
+                    <p className={`text-xxs font-semibold truncate max-w-[160px] ${theme.textMuted}`} title={stock.name}>
                       {stock.name}
                     </p>
                   </div>
-                  <span className={`px-2 py-1 rounded-lg text-xxs font-extrabold border font-mono ${
+                  <span className={`px-2 py-1 rounded-lg text-xxs font-extrabold border ${numFontClass} ${
                     stock.isPositive
-                      ? "bg-emerald-50 text-emerald-700 border-emerald-200"
-                      : "bg-rose-50 text-rose-700 border-rose-200"
+                      ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                      : "bg-rose-500/15 text-rose-400 border-rose-500/30"
                   }`}>
                     {stock.isPositive ? "+" : ""}{stock.changePercent}%
                   </span>
                 </div>
 
-                <div className="pt-2 border-t border-slate-200/60">
-                  <div className="text-2xl font-black text-slate-900 font-mono">
+                <div className="pt-2 border-t border-slate-700/40">
+                  <div className={`text-2xl font-black ${numFontClass} ${theme.textPrimary}`}>
                     {formatCurrency(stock.price)}
                   </div>
-                  <div className="text-xxs font-semibold text-slate-500 mt-0.5 flex justify-between font-mono">
-                    <span className="font-sans">24h Change:</span>
-                    <span className={stock.isPositive ? "text-emerald-600 font-bold" : "text-rose-600 font-bold"}>
+                  <div className={`text-xxs font-semibold mt-0.5 flex justify-between ${numFontClass} ${theme.textMuted}`}>
+                    <span>24h Change:</span>
+                    <span className={stock.isPositive ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                       {stock.isPositive ? "+" : ""}{formatCurrency(stock.change24h)}
                     </span>
                   </div>
@@ -1238,18 +1374,20 @@ function PreciousMetals() {
                   </ResponsiveContainer>
                 </div>
 
-                <div className="space-y-1 bg-white/80 p-2.5 rounded-xl border border-slate-100 text-xxs font-semibold text-slate-600 font-mono">
+                <div className={`space-y-1 p-2.5 rounded-xl border text-xxs font-semibold ${numFontClass} ${
+                  pageTheme === "ivory-light" ? "bg-white border-slate-200 text-slate-700" : "bg-slate-900 border-slate-800 text-slate-300"
+                }`}>
                   <div className="flex justify-between">
-                    <span className="font-sans">1Y CAGR Return:</span>
-                    <span className="font-extrabold text-emerald-700">{stock.oneYearReturn}</span>
+                    <span>1Y CAGR Return:</span>
+                    <span className="font-extrabold text-emerald-400">{stock.oneYearReturn}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="font-sans">Day Range:</span>
-                    <span className="font-bold text-slate-800">₹{stock.dayLow} - ₹{stock.dayHigh}</span>
+                    <span>Day Range:</span>
+                    <span className={`font-bold ${theme.textPrimary}`}>₹{stock.dayLow} - ₹{stock.dayHigh}</span>
                   </div>
-                  <div className="flex justify-between pt-0.5 border-t border-slate-100 text-slate-400 font-sans">
+                  <div className="flex justify-between pt-0.5 border-t border-slate-800/60 text-slate-400">
                     <span>Underlying:</span>
-                    <span className="truncate max-w-[110px] text-slate-600 font-medium">{stock.underlying}</span>
+                    <span className="truncate max-w-[110px] text-slate-300 font-medium">{stock.underlying}</span>
                   </div>
                 </div>
               </div>
@@ -1268,7 +1406,7 @@ function PreciousMetals() {
                 <button
                   type="button"
                   onClick={() => handleSelectStock(stock.symbol)}
-                  className="w-full py-2 rounded-xl bg-slate-900 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs group-hover:bg-amber-500 group-hover:text-slate-950"
+                  className="w-full py-2 rounded-xl bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-white text-xs font-black transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs group-hover:bg-amber-500 group-hover:text-slate-950"
                 >
                   <span>📈 View Stock Graph</span>
                 </button>
@@ -1279,28 +1417,34 @@ function PreciousMetals() {
       </div>
 
       {/* AI Asset Allocation & Investment Guidance */}
-      <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/5 to-purple-500/10 rounded-3xl p-6 sm:p-8 border border-amber-200/80 shadow-md space-y-4 font-sans">
-        <div className="flex items-center gap-2 border-b border-amber-200/40 pb-3">
+      <div className={`rounded-3xl p-6 sm:p-8 border shadow-md space-y-4 ${theme.sectionCard}`}>
+        <div className="flex items-center gap-2 border-b border-slate-700/40 pb-3">
           <span className="text-xl">🤖</span>
-          <h3 className="text-base font-extrabold text-slate-900">AI Bullion Portfolio Guidance</h3>
+          <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>AI Bullion Portfolio Guidance</h3>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium text-slate-700 leading-relaxed">
-          <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-amber-200/60 space-y-1">
-            <span className="font-extrabold text-amber-800 block">💡 Ideal Portfolio Allocation</span>
-            <p className="text-slate-600">Financial planners recommend allocating 5% - 15% of your total net worth into physical gold or Sovereign Gold Bonds (SGB) as a hedge against equity market volatility.</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium leading-relaxed">
+          <div className={`p-4 rounded-2xl border space-y-1 ${
+            pageTheme === "ivory-light" ? "bg-amber-50/80 border-amber-200 text-slate-800" : "bg-slate-950/60 border-amber-500/30 text-slate-200"
+          }`}>
+            <span className="font-extrabold text-amber-400 block">💡 Ideal Portfolio Allocation</span>
+            <p className={theme.textMuted}>Financial planners recommend allocating 5% - 15% of your total net worth into physical gold or Sovereign Gold Bonds (SGB) as a hedge against equity market volatility.</p>
           </div>
-          <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-indigo-200/60 space-y-1">
-            <span className="font-extrabold text-indigo-800 block">📊 Gold-to-Silver Ratio ({goldSilverRatio})</span>
-            <p className="text-slate-600">Historically, a ratio above 80 indicates Silver is relatively undervalued compared to Gold, offering potential upside for long-term commodity accumulation.</p>
+          <div className={`p-4 rounded-2xl border space-y-1 ${
+            pageTheme === "ivory-light" ? "bg-indigo-50/80 border-indigo-200 text-slate-800" : "bg-slate-950/60 border-indigo-500/30 text-slate-200"
+          }`}>
+            <span className="font-extrabold text-indigo-400 block">📊 Gold-to-Silver Ratio ({goldSilverRatio})</span>
+            <p className={theme.textMuted}>Historically, a ratio above 80 indicates Silver is relatively undervalued compared to Gold, offering potential upside for long-term commodity accumulation.</p>
           </div>
-          <div className="bg-white/80 backdrop-blur-md p-4 rounded-2xl border border-purple-200/60 space-y-1">
-            <span className="font-extrabold text-purple-800 block">🛡️ Inflation Protection</span>
-            <p className="text-slate-600">Gold in INR has delivered an average annual CAGR of 9.5% over the past 20 years in India, consistently outperforming domestic consumer CPI inflation.</p>
+          <div className={`p-4 rounded-2xl border space-y-1 ${
+            pageTheme === "ivory-light" ? "bg-purple-50/80 border-purple-200 text-slate-800" : "bg-slate-950/60 border-purple-500/30 text-slate-200"
+          }`}>
+            <span className="font-extrabold text-purple-400 block">🛡️ Inflation Protection</span>
+            <p className={theme.textMuted}>Gold in INR has delivered an average annual CAGR of 9.5% over the past 20 years in India, consistently outperforming domestic consumer CPI inflation.</p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row justify-between sm:items-center pt-3 border-t border-amber-200/40 gap-3">
-          <p className="text-xs font-bold text-slate-700">Ready to invest in Gold ETFs, Bullion, or SGBs?</p>
+        <div className="flex flex-col sm:flex-row justify-between sm:items-center pt-3 border-t border-slate-700/40 gap-3">
+          <p className={`text-xs font-bold ${theme.textPrimary}`}>Ready to invest in Gold ETFs, Bullion, or SGBs?</p>
           <a
             href="https://groww.in/gold"
             target="_blank"
@@ -1309,10 +1453,9 @@ function PreciousMetals() {
           >
             <span>Start Gold Investment on Groww</span>
             <span>↗</span>
-          </a>
         </div>
       </div>
-
+    </div>
     </div>
   );
 }

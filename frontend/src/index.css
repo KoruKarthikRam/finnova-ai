@@ -96,6 +96,58 @@
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
 }
 
+/* Custom Luxury Typography Utilities */
+.font-cinzel {
+  font-family: 'Cinzel', serif;
+}
+
+.font-space {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.font-outfit {
+  font-family: 'Outfit', sans-serif;
+}
+
+.font-mono-wealth {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Gold & Metallic Luxury Glow Effects */
+.glow-gold {
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.4);
+}
+
+.glow-silver {
+  box-shadow: 0 0 35px -5px rgba(148, 163, 184, 0.4);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.4);
+}
+
+/* Metallic Shimmer Text Animations */
+@keyframes goldShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-gold-text {
+  background: linear-gradient(90deg, #f59e0b 0%, #fef08a 25%, #f59e0b 50%, #b45309 75%, #f59e0b 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 6s linear infinite;
+}
+
+.shimmer-silver-text {
+  background: linear-gradient(90deg, #94a3b8 0%, #ffffff 25%, #cbd5e1 50%, #475569 75%, #94a3b8 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: goldShimmer 6s linear infinite;
+}
+
 /* Custom Sleek Scrollbar */
 ::-webkit-scrollbar {
   width: 7px;
