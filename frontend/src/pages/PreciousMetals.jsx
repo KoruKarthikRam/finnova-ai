@@ -387,10 +387,10 @@ function PreciousMetals() {
               </span>
               <div>
                 <h1 className={`text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2 ${headingFontClass} text-slate-900`}>
-                  Live Gold & Silver Bullion Hub <span className={`text-lg ${numFontClass} ${theme.bannerAccent}`}>(INR ₹)</span>
+                  Live Investments & Bullion Hub <span className={`text-lg ${numFontClass} ${theme.bannerAccent}`}>(INR ₹)</span>
                 </h1>
                 <p className="text-xs sm:text-sm font-medium mt-0.5 text-slate-600">
-                  Real-time Indian spot pricing for 24K, 22K, 18K Gold, Fine Silver, Gold ETFs & sharp vector stock graphs.
+                  Real-time Indian spot pricing for Gold, Fine Silver, Gold ETFs, NBFC equities & investment assets.
                 </p>
               </div>
             </div>
@@ -1171,7 +1171,7 @@ function PreciousMetals() {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">🏙️</span>
-              <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>City-wise Gold & Silver Benchmark Rates</h3>
+              <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>City-wise Benchmark Investment Rates</h3>
             </div>
             <p className={`text-xs mt-0.5 ${theme.textMuted}`}>
               Standard local market pricing per 10 grams (Gold) and 1 KG (Silver) incorporating regional duties.

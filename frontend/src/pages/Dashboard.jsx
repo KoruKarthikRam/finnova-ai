@@ -295,7 +295,7 @@ function Dashboard() {
         
         <div className="flex flex-wrap items-center gap-3">
           <Link
-            to="/metals"
+            to="/investments"
             className="rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 px-4 py-2 text-xs font-black text-white transition shadow-xs cursor-pointer flex items-center gap-1.5"
           >
             <span>🪙</span> Gold: {metalRates ? formatCurrency(metalRates.gold?.rates["24K"]?.perGram) : "₹7,480"}/g
@@ -406,10 +406,10 @@ function Dashboard() {
                 </div>
 
                 <Link
-                  to="/metals"
+                  to="/investments"
                   className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold transition shadow-xs cursor-pointer"
                 >
-                  Bullion Hub & Calculator →
+                  Investments Hub & Calculator →
                 </Link>
               </div>
             </div>

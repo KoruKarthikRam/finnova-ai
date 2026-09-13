@@ -115,6 +115,14 @@ function AppContent() {
               }
             />
             <Route
+              path="/investments"
+              element={
+                <ProtectedRoute>
+                  <PreciousMetals />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/metals"
               element={
                 <ProtectedRoute>
