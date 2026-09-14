@@ -25,7 +25,7 @@ function Assistant() {
     loading: true,
   });
 
-  const chatEndRef = useRef(null);
+  const messagesContainerRef = useRef(null);
 
   const getAuthConfig = () => {
     const token = localStorage.getItem("token");
@@ -127,9 +127,14 @@ function Assistant() {
     fetchLiveContext();
   }, []);
 
-  // Auto scroll to latest message
+  // Auto scroll to latest message inside feed container only
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages, isLoading]);
 
   const handleSendMessage = async (textToSend) => {
@@ -427,7 +432,7 @@ function Assistant() {
         <div className="lg:col-span-3 flex flex-col h-[70vh] bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
           
           {/* Messages Feed */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scrollbar-thin scrollbar-thumb-slate-200">
             {messages.map((msg, index) => {
               const isAssistant = msg.sender === "assistant";
               return (
@@ -497,8 +502,6 @@ function Assistant() {
                 </div>
               </div>
             )}
-
-            <div ref={chatEndRef} />
           </div>
 
           {/* Quick Suggestion Chips */}
