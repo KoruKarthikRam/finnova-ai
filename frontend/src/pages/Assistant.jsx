@@ -127,13 +127,14 @@ function Assistant() {
     fetchLiveContext();
   }, []);
 
-  // Auto scroll to latest message inside feed container only
+  // Auto scroll to latest message inside feed container only without moving outer window
   useEffect(() => {
     if (messagesContainerRef.current) {
-      messagesContainerRef.current.scrollTo({
-        top: messagesContainerRef.current.scrollHeight,
-        behavior: "smooth",
-      });
+      const currentWindowY = window.scrollY;
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      if (window.scrollY !== currentWindowY) {
+        window.scrollTo(0, currentWindowY);
+      }
     }
   }, [messages, isLoading]);
 
@@ -190,13 +191,6 @@ function Assistant() {
       );
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
     }
   };
 
@@ -520,18 +514,23 @@ function Assistant() {
 
           {/* Input Panel */}
           <div className="p-4 border-t border-slate-100 bg-white">
-            <div className="flex gap-3 items-center">
-              <textarea
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSendMessage();
+              }}
+              className="flex gap-3 items-center"
+            >
+              <input
+                type="text"
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
-                onKeyDown={handleKeyDown}
                 placeholder="Ask about SIPs, Section 80C deductions, or budgeting..."
                 disabled={isLoading}
-                rows={1}
-                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 font-medium focus:border-indigo-500 focus:outline-none resize-none disabled:bg-slate-50 disabled:cursor-not-allowed max-h-24 scrollbar-thin"
+                className="flex-1 rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-900 font-medium focus:border-indigo-500 focus:outline-none disabled:bg-slate-50 disabled:cursor-not-allowed"
               />
               <button
-                onClick={() => handleSendMessage()}
+                type="submit"
                 disabled={isLoading || !inputMessage.trim()}
                 className="rounded-xl bg-indigo-600 p-3 text-white hover:bg-indigo-700 transition shadow duration-150 cursor-pointer disabled:bg-slate-200 disabled:cursor-not-allowed disabled:shadow-none shrink-0"
                 title="Send Message"
@@ -550,7 +549,7 @@ function Assistant() {
                   />
                 </svg>
               </button>
-            </div>
+            </form>
           </div>
         </div>
 
