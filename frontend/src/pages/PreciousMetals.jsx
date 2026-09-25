@@ -64,7 +64,7 @@ function PreciousMetals() {
   // Live Stock Graph State
   const [selectedStockSymbol, setSelectedStockSymbol] = useState("GOLDBEES");
   const [stockTimeframe, setStockTimeframe] = useState("1D");
-  const [curveStyle, setCurveStyle] = useState("linear"); // "linear" for sharp vector curves, "monotone" for smooth
+  const [curveStyle, setCurveStyle] = useState("monotone"); // "monotone" for smooth wave curves
   const [graphTheme, setGraphTheme] = useState("light"); // "light" for premium crisp light theme, "dark" for dark mode
   const [stockGraphData, setStockGraphData] = useState(null);
   const [stockGraphLoading, setStockGraphLoading] = useState(false);
@@ -524,7 +524,7 @@ function PreciousMetals() {
           <div className="h-8 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
-                <Line type="linear" dataKey="gold24kPerGram" stroke="#d97706" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="gold24kPerGram" stroke="#d97706" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -578,7 +578,7 @@ function PreciousMetals() {
           <div className="h-8 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
-                <Line type="linear" dataKey="gold24kPerGram" stroke="#eab308" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="gold24kPerGram" stroke="#eab308" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -621,7 +621,7 @@ function PreciousMetals() {
           <div className="h-8 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
-                <Line type="linear" dataKey="gold24kPerGram" stroke="#f97316" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="gold24kPerGram" stroke="#f97316" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -664,7 +664,7 @@ function PreciousMetals() {
           <div className="h-8 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={historyData}>
-                <Line type="linear" dataKey="silverPerGram" stroke="#64748b" strokeWidth={2} dot={false} />
+                <Line type="monotone" dataKey="silverPerGram" stroke="#64748b" strokeWidth={2} dot={false} />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -855,7 +855,7 @@ function PreciousMetals() {
           <div className="flex justify-between items-center border-b border-slate-200 pb-3">
             <div>
               <h3 className={`text-base font-extrabold ${headingFontClass} ${theme.textPrimary}`}>7-Day Gold Spot Trend (₹ / Gram 24K)</h3>
-              <p className={`text-xs ${theme.textMuted}`}>Intraday spot market sharp vector price trajectory</p>
+              <p className={`text-xs ${theme.textMuted}`}>Intraday spot market smooth price trajectory</p>
             </div>
             <div className={`text-xs font-extrabold px-3 py-1 rounded-full border ${numFontClass} ${theme.badge}`}>
               Ratio: {goldSilverRatio} (Au/Ag)
@@ -879,7 +879,7 @@ function PreciousMetals() {
                   contentStyle={{ backgroundColor: "#ffffff", borderColor: "#f59e0b", borderRadius: "12px", color: "#0f172a", fontWeight: "bold" }}
                 />
                 <Area
-                  type="linear"
+                  type="monotone"
                   dataKey="gold24kPerGram"
                   stroke="#d97706"
                   strokeWidth={3}
@@ -917,7 +917,7 @@ function PreciousMetals() {
 
       </div>
 
-      {/* Live Gold & ETF Interactive Sharp Vector Stock Graph Section */}
+      {/* Live Gold & ETF Interactive Smooth Wave Stock Graph Section */}
       <div
         ref={stockGraphRef}
         className="rounded-3xl p-6 sm:p-8 border transition-all duration-300 shadow-md space-y-6 relative overflow-hidden backdrop-blur-xl bg-white border-slate-200 text-slate-900"
@@ -942,36 +942,15 @@ function PreciousMetals() {
               </h2>
             </div>
             <p className="text-xs font-medium text-slate-600">
-              Real-time sharp vector intraday tick chart & technical indicators for Gold spot, Gold ETFs, NBFC equities & Sovereign Gold Bonds.
+              Real-time smooth wave intraday tick chart & technical indicators for Gold spot, Gold ETFs, NBFC equities & Sovereign Gold Bonds.
             </p>
           </div>
 
-          {/* Timeframe Controls, Curve Style Toggle, & Live Stream Toggle */}
+          {/* Timeframe Controls & Live Stream Toggle */}
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Curve Style Switcher */}
-            <div className="flex items-center p-1 rounded-2xl border bg-slate-100 border-slate-200">
-              <button
-                type="button"
-                onClick={() => setCurveStyle("linear")}
-                className={`px-3 py-1.5 rounded-xl text-xxs font-black transition cursor-pointer flex items-center gap-1 ${
-                  curveStyle === "linear"
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-black"
-                    : "text-slate-700 hover:text-slate-900"
-                }`}
-              >
-                ⚡ Sharp Vector
-              </button>
-              <button
-                type="button"
-                onClick={() => setCurveStyle("monotone")}
-                className={`px-3 py-1.5 rounded-xl text-xxs font-black transition cursor-pointer flex items-center gap-1 ${
-                  curveStyle === "monotone"
-                    ? "bg-amber-500 text-slate-950 shadow-xs font-black"
-                    : "text-slate-700 hover:text-slate-900"
-                }`}
-              >
-                🌊 Smooth Wave
-              </button>
+            {/* Smooth Wave Curve Indicator */}
+            <div className="flex items-center px-3 py-1.5 rounded-2xl border bg-amber-500/10 border-amber-500/30 text-amber-900 text-xxs font-extrabold gap-1.5">
+              <span>🌊</span> Smooth Wave Curves
             </div>
 
             {stockTimeframe === "1D" && (
@@ -1316,7 +1295,7 @@ function PreciousMetals() {
                       { p: stock.price }
                     ]}>
                       <Line
-                        type="linear"
+                        type="monotone"
                         dataKey="p"
                         stroke={stock.isPositive ? "#059669" : "#e11d48"}
                         strokeWidth={2.2}
